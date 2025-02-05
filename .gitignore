@@ -1,0 +1,58 @@
+# 🔹 Käännetyt binäärit ja tilapäistiedostot
+*.exe
+*.out
+*.obj
+*.o
+*.a
+*.lib
+*.so
+*.dll
+*.dylib  # macOS-kirjastot
+
+# 🔹 CMake-käännöksen luomat tiedostot
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/Makefile
+/*.cmake
+*.ninja  # Ninja build -tiedostot (varotoimi)
+
+/build/
+Debug/
+Release/
+
+# 🔹 Testien build-kansiot (jos testejä käännetään erikseen)
+tests/build/
+
+# 🔹 VS Code -projektitiedostot
+.vscode/
+
+# 🔹 MacOS ja Windows tilapäistiedostot
+.DS_Store
+Thumbs.db
+
+# 🔹 SFML- ja Vcpkg-lataukset
+SFML-*
+vcpkg_installed/
+
+# 🔹 Dokumentaatio (jos sisältää vain kehitysdokumentaatiota)
+docs/
+
+# 🔹 Väliaikaiset CMake-tiedostot
+CMake_SFML(*).txt
+
+# 🔹 Visual Studio -projektitiedostot
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.ipch/
+*.ncb
+*.sdf
+*.opensdf
+
+# 🔹 MinGW ja GCC build -tilapäistiedostot
+*.d
+*.gcda
+*.gcno
+*.gcov
