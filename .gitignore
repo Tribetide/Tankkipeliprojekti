@@ -17,6 +17,12 @@
 /*.cmake
 *.ninja  # Ninja build -tiedostot (varotoimi)
 
+
+vcpkg.json
+CMakePresets.json
+CMakeUserPresets.json
+
+
 /build/
 Debug/
 Release/
