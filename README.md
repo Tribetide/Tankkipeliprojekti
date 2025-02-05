@@ -104,10 +104,17 @@ make
 📆 Tankkipeli
  ├🗂 src/           # Lähdekooditiedostot
  │ ├📝 main.cpp     # Pääohjelma
- │ ├📝 physics.cpp  # Pelifysiikka
- │ └📝 tank.cpp     # Tankin ohjauslogiikka
+ │ ├📝 Game.cpp     # Pelin logiikka
+ │ ├📝 Tank.cpp     # Tankin hallinta
+ │ ├📝 Projectile.cpp # Ammuksen hallinta
+ │ ├📝 Terrain.cpp  # Maaston käsittely
  ├🗂 include/       # Otsikkotiedostot
+ │ ├📝 Game.hpp     # Pelilogiikan määrittelyt
+ │ ├📝 Tank.hpp     # Tankkiin liittyvät määrittelyt
+ │ ├📝 Projectile.hpp # Ammuksen määrittelyt
+ │ ├📝 Terrain.hpp  # Maaston määrittelyt
  ├🗂 assets/        # Grafiikka- ja äänitiedostot
+ ├🗂 tests/         # Testitiedostot
  ├📝 CMakeLists.txt # CMake-konfiguraatio
  ├📝 .gitignore     # GitHubin ignorointitiedosto
  ├📝 README.md      # Tämä tiedosto
