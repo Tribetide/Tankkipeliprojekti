@@ -91,9 +91,8 @@ make
 ---
 
 ## 🎮 Pelin ohjaus (Controls)
-- **Nuolinäppäimet**: Liikuta tankkia
-- **A ja D**: Säädä tykin kulmaa
-- **W ja S**: Säädä laukaisuvoimaa
+- **Vasen-nuoli ja Oikea-nuoli **: Säädä tykin kulmaa
+- **Ylös-nuoli ja Alas-nuoli**: Säädä laukaisuvoimaa
 - **Välilyönti (Space)**: Ammu
 - **Esc**: Poistu pelistä
 
