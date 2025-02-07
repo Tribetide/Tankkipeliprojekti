@@ -17,6 +17,10 @@ public:
     float getPower() const;
     Projectile shoot();
     void placeOnTerrain(Terrain &terrain); //UUSI
+    void move(float dx);
+    sf::Vector2f getPosition() const; // Lisätään, jotta voidaan tarkistaa sijainti
+    
+
 
 private:
     sf::CircleShape upperBody;  

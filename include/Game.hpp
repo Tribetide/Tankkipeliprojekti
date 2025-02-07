@@ -22,6 +22,8 @@ private:
     Terrain terrain;
     std::vector<Projectile> projectiles;
     float gravity;
+
+    sf::Font font; // 🔥 Lisätään globaali fontti
 };
 
 #endif

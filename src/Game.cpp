@@ -1,10 +1,16 @@
 #include <iostream>
 #include "Game.hpp"
-#include "Tank.hpp"
+#include <Config.hpp>
 
 Game::Game() : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"), gravity(0.0005f) {
     terrain.initialize();
     tank.placeOnTerrain(terrain);
+
+
+        // 🔥 Ladataan fontti kerran
+        if (!font.loadFromFile(Config::FONT_PATH)) {
+            std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: " << Config::FONT_PATH << std::endl;
+        }
 }
 
 
@@ -33,6 +39,10 @@ void Game::processEvents() {
                 tank.adjustPower(-5.0f);  // Vähentää voimaa
             if (event.key.code == sf::Keyboard::Space)
                 projectiles.push_back(tank.shoot());  // Ampuu
+            if (event.key.code == sf::Keyboard::A)
+                tank.move(-5.0f);  // Liiku vasemmalle
+            if (event.key.code == sf::Keyboard::D)
+                tank.move(5.0f);   // Liiku oikealle
         }
     }
 }
@@ -53,14 +63,6 @@ void Game::render() {
 
     for (auto &p : projectiles) {
         if (p.alive) window.draw(p.shape);
-    }
-
-    // Näytetään UI (kulma ja voima)
-    sf::Font font;
-
-    // Yritetään löytää fontti oletuspolusta
-    if (!font.loadFromFile("assets/fonts/arial.ttf")) { 
-        std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: ../../assets/fonts/arial.ttf" << std::endl;
     }
 
 
