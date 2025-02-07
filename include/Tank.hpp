@@ -4,6 +4,9 @@
 #include <SFML/Graphics.hpp>
 #include "Projectile.hpp"
 
+
+
+
 class Tank {
 public:
     Tank();
@@ -13,6 +16,7 @@ public:
     float getAngle() const;
     float getPower() const;
     Projectile shoot();
+    void placeOnTerrain(Terrain &terrain); //UUSI
 
 private:
     sf::CircleShape upperBody;  
@@ -20,6 +24,7 @@ private:
     sf::RectangleShape turret;
     float angle;
     float power;
+    
 };
 
 #endif

@@ -1,8 +1,10 @@
 #include <iostream>
 #include "Game.hpp"
+#include "Tank.hpp"
 
 Game::Game() : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"), gravity(0.0005f) {
     terrain.initialize();
+    tank.placeOnTerrain(terrain);
 }
 
 
@@ -57,7 +59,7 @@ void Game::render() {
     sf::Font font;
 
     // Yritetään löytää fontti oletuspolusta
-    if (!font.loadFromFile("../../assets/fonts/arial.ttf")) { 
+    if (!font.loadFromFile("assets/fonts/arial.ttf")) { 
         std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: ../../assets/fonts/arial.ttf" << std::endl;
     }
 

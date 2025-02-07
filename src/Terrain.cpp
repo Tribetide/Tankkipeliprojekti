@@ -3,12 +3,73 @@
 
 Terrain::Terrain() {}
 
-void Terrain::initialize() {
-    terrainImage.create(1920, 1080, sf::Color::Transparent); // 🔥 Taivas on läpinäkyvä
+#include <cstdlib>
+#include <ctime>
 
-    // 🔥 Täytetään vain alaosa vihreällä (esim. alemmat 600 pikseliä)
+// void Terrain::initialize() {
+//     std::srand(std::time(nullptr)); // Satunnaislukugeneraattorin alustus
+//     terrainImage.create(1920, 1080, sf::Color::Transparent);
+
+//     int groundHeight[1920]; // Taulukko maaston korkeuksille
+
+//     // **Luodaan satunnainen maasto käyttäen siniaaltoa ja satunnaista vaihtelua**
+//     for (int x = 0; x < terrainImage.getSize().x; x++) {
+//         float frequency = 0.005f; // Maaston "aallonpituus"
+//         float amplitude = 100.0f; // Maaston korkeusvaihtelut
+//         int baseHeight = 600; // Peruskorkeus
+//         int randomOffset = std::rand() % 5 - 2; // Satunnainen vaihtelu
+
+//         groundHeight[x] = baseHeight + std::sin(x * frequency) * amplitude + randomOffset;
+//     }
+
+//     // **Täytetään maasto vihreällä**
+//     for (int x = 0; x < terrainImage.getSize().x; x++) {
+//         for (int y = groundHeight[x]; y < terrainImage.getSize().y; y++) {
+//             terrainImage.setPixel(x, y, sf::Color::Green);
+//         }
+//     }
+
+//     texture.loadFromImage(terrainImage);
+//     sprite.setTexture(texture);
+//     sprite.setPosition(0, 0);
+// }
+
+void Terrain::initialize() {
+    std::srand(std::time(nullptr)); // Satunnaislukugeneraattorin alustus
+    terrainImage.create(1920, 1080, sf::Color::Transparent);
+
+    int groundHeight[1920]; // Taulukko maaston korkeuksille
+
+    float frequency1 = 0.003f + static_cast<float>(std::rand() % 3) / 1000.0f; // Pääaallonpituus
+    float frequency2 = 0.009f + static_cast<float>(std::rand() % 5) / 1000.0f; // Toissijainen aallonpituus
+    float amplitude1 = 100.0f + std::rand() % 50; // Ensimmäinen aalto
+    float amplitude2 = 50.0f + std::rand() % 30; // Toinen aalto
+    int baseHeight = 500 + std::rand() % 150; // Peruskorkeus satunnaistettuna
+
     for (int x = 0; x < terrainImage.getSize().x; x++) {
-        for (int y = 300; y < terrainImage.getSize().y; y++) { // 🔥 Muokkaa, jos haluat enemmän/vähemmän maata
+        int randomOffset = std::rand() % 5 - 3; // Lisää pientä vaihtelua
+        groundHeight[x] = baseHeight +
+                          std::sin(x * frequency1) * amplitude1 +
+                          std::sin(x * frequency2) * amplitude2 +
+                          randomOffset;
+    }
+
+    // **Lisätään satunnaisia kukkuloita ja kuoppia**
+    for (int i = 0; i < 5; i++) { // 5 satunnaista kukkulaa
+        int hillX = std::rand() % 1920;
+        int hillSize = 50 + std::rand() % 100;
+        int hillHeight = 20 + std::rand() % 50;
+
+        for (int x = hillX - hillSize; x < hillX + hillSize; x++) {
+            if (x >= 0 && x < 1920) {
+                groundHeight[x] -= hillHeight * std::exp(-((x - hillX) * (x - hillX)) / (2.0 * hillSize * hillSize));
+            }
+        }
+    }
+
+    // **Täytetään maasto vihreällä**
+    for (int x = 0; x < terrainImage.getSize().x; x++) {
+        for (int y = groundHeight[x]; y < terrainImage.getSize().y; y++) {
             terrainImage.setPixel(x, y, sf::Color::Green);
         }
     }
@@ -17,6 +78,7 @@ void Terrain::initialize() {
     sprite.setTexture(texture);
     sprite.setPosition(0, 0);
 }
+
 
 void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
     window.draw(sprite);  // 🔥 Piirretään sprite

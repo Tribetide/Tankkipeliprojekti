@@ -1,4 +1,6 @@
 #include "Tank.hpp"
+#include "Terrain.hpp" // 🔥 Lisätty, jotta voidaan käyttää Terrain-olioita
+#include <cmath>  // Tämä tarvitaan trigonometristen funktioiden käyttöön
 
 Tank::Tank() : angle(45.0f), power(50.0f) {
     // 🔥 Yläosa: puoliympyrä
@@ -39,6 +41,26 @@ void Tank::rotateTurret(float angleDelta) {
     // Päivitetään tykin sijainti suhteessa tankin runkoon
     turret.setPosition(upperBody.getPosition().x + 25, upperBody.getPosition().y);
 }
+
+void Tank::placeOnTerrain(Terrain &terrain) {
+    int startX = 350; // Alkuperäinen X-sijainti
+    int y = 0;
+
+    // Etsitään korkein piste, jossa maasto ei ole läpinäkyvä
+    for (int i = 0; i < 1080; i++) {
+        if (terrain.checkCollision(sf::Vector2f(startX, i))) {
+            y = i - 40; // Tankin sijoitus (jotta ei jää maaston sisään)
+            break;
+        }
+    }
+
+    // Asetetaan tankin osat uudelle paikalle
+    upperBody.setPosition(startX, y);
+    lowerBody.setPosition(startX - 15, y + 30);
+    turret.setPosition(startX + 25, y);
+}
+
+
 
 
 
