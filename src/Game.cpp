@@ -31,6 +31,10 @@ void Game::processEvents() {
                 tank.adjustPower(-5.0f);  // Vähentää voimaa
             if (event.key.code == sf::Keyboard::Space)
                 projectiles.push_back(tank.shoot());  // Ampuu
+            if (event.key.code == sf::Keyboard::A)
+                tank.move(-5.0f);  // Liiku vasemmalle
+            if (event.key.code == sf::Keyboard::D)
+                tank.move(5.0f);   // Liiku oikealle
         }
     }
 }
@@ -57,9 +61,10 @@ void Game::render() {
     sf::Font font;
 
     // Yritetään löytää fontti oletuspolusta
-    if (!font.loadFromFile("../../assets/fonts/arial.ttf")) { 
-        std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: ../../assets/fonts/arial.ttf" << std::endl;
+    if (!font.loadFromFile("C:\\ohjelmistoprojekti\\Tankkipeliprojekti\\assets\\fonts\\arial.ttf")) {
+        std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: C:\\ohjelmistoprojekti\\Tankkipeliprojekti\\assets\\fonts\\arial.ttf" << std::endl;
     }
+    
 
 
     sf::Text angleText("Kulma: " + std::to_string((int)tank.getAngle()), font, 20);
