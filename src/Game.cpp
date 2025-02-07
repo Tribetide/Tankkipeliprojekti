@@ -1,8 +1,15 @@
 #include <iostream>
 #include "Game.hpp"
+#include <Config.hpp>
 
 Game::Game() : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"), gravity(0.0005f) {
     terrain.initialize();
+
+
+        // 🔥 Ladataan fontti kerran
+        if (!font.loadFromFile(Config::FONT_PATH)) {
+            std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: " << Config::FONT_PATH << std::endl;
+        }
 }
 
 
@@ -56,15 +63,6 @@ void Game::render() {
     for (auto &p : projectiles) {
         if (p.alive) window.draw(p.shape);
     }
-
-    // Näytetään UI (kulma ja voima)
-    sf::Font font;
-
-    // Yritetään löytää fontti oletuspolusta
-    if (!font.loadFromFile("C:\\ohjelmistoprojekti\\Tankkipeliprojekti\\assets\\fonts\\arial.ttf")) {
-        std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: C:\\ohjelmistoprojekti\\Tankkipeliprojekti\\assets\\fonts\\arial.ttf" << std::endl;
-    }
-    
 
 
     sf::Text angleText("Kulma: " + std::to_string((int)tank.getAngle()), font, 20);
