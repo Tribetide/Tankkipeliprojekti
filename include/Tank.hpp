@@ -13,6 +13,10 @@ public:
     float getAngle() const;
     float getPower() const;
     Projectile shoot();
+    void move(float dx);
+    sf::Vector2f getPosition() const; // Lisätään, jotta voidaan tarkistaa sijainti
+    
+
 
 private:
     sf::CircleShape upperBody;  

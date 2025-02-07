@@ -1,4 +1,6 @@
 #include "Tank.hpp"
+#include <cmath>
+
 
 Tank::Tank() : angle(45.0f), power(50.0f) {
     // 🔥 Yläosa: puoliympyrä
@@ -27,6 +29,15 @@ void Tank::draw(sf::RenderWindow &window) {
 }
 
 
+void Tank::move(float dx) {
+    upperBody.move(dx, 0);
+    lowerBody.move(dx, 0);
+    turret.move(dx, 0);
+}
+
+sf::Vector2f Tank::getPosition() const {
+    return upperBody.getPosition();
+}
 
 
 void Tank::rotateTurret(float angleDelta) {
