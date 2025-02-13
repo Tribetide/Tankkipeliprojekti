@@ -109,7 +109,7 @@ Projectile Tank::shoot() {
     p.velocity = sf::Vector2f(std::cos(radianAngle) * speed, std::sin(radianAngle) * speed);
 
     // 🔥 Voima vaikuttaa painovoimaan, jolloin suurempi voima = pienempi pudotus
-    p.gravityEffect = 0.0005f + (100.0f - power) / 10000.0f; // Pienempi voima → suurempi painovoimavaikutus
+    p.setGravity(0.0005f + (100.0f - power) / 10000.0f); // Pienempi voima → suurempi painovoimavaikutus
 
     p.alive = true;
     return p;

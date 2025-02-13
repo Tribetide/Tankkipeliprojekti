@@ -1,16 +1,22 @@
 #include <iostream>
 #include "Game.hpp"
 #include <Config.hpp>
+#include <cstdlib>  // satunnaislukujen generointi
+#include <ctime>    // ajan käyttö satunnaislukujen generointiin
 
 Game::Game() : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"), gravity(0.0005f) {
     terrain.initialize();
     tank.placeOnTerrain(terrain);
 
 
-        // 🔥 Ladataan fontti kerran
-        if (!font.loadFromFile(Config::FONT_PATH)) {
-            std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: " << Config::FONT_PATH << std::endl;
-        }
+    // 🔥 Ladataan fontti kerran
+    if (!font.loadFromFile(Config::FONT_PATH)) {
+        std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: " << Config::FONT_PATH << std::endl;
+    }
+
+    // 🔥 Alustetaan satunnainen tuuli (-0.002f ja 0.002f välillä)
+    std::srand(std::time(nullptr));
+    windForce = (std::rand() % 200 - 100) / 50000.0f;
 }
 
 
@@ -52,9 +58,10 @@ void Game::processEvents() {
 
 void Game::update() {
     for (auto &p : projectiles) {
-        p.update(gravity, terrain);
+        p.update(gravity, terrain, windForce);  // 🔥 Päivitetty versio
     }
 }
+
 
 void Game::render() {
     window.clear();

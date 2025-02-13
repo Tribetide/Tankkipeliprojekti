@@ -21,7 +21,8 @@ private:
     Tank tank;
     Terrain terrain;
     std::vector<Projectile> projectiles;
-    float gravity;
+    float gravity; // 🔥  painovoima
+    float windForce; // 🔥  tuuli
 
     sf::Font font; // 🔥 Lisätään globaali fontti
 };
