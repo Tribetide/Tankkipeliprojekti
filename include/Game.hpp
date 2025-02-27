@@ -6,6 +6,7 @@
 #include "Tank.hpp"
 #include "Terrain.hpp"
 #include "Projectile.hpp"
+#include "EventManager.hpp"
 
 class Game {
 public:
@@ -16,14 +17,20 @@ private:
     void processEvents();
     void update();
     void render();
+    void drawWindIndicator();
+
 
     sf::RenderWindow window;
-    Tank tank;
+    Tank tank1;
+    Tank tank2;
+    bool isPlayerOneTurn; // Vuorottelua
     Terrain terrain;
     std::vector<Projectile> projectiles;
-    float gravity;
+    float gravity; // 🔥  painovoima
+    float windForce; // 🔥  tuuli
 
     sf::Font font; // 🔥 Lisätään globaali fontti
+    EventManager eventManager;
 };
 
 #endif

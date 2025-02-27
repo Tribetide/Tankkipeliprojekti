@@ -16,7 +16,7 @@ public:
     float getAngle() const;
     float getPower() const;
     Projectile shoot();
-    void placeOnTerrain(Terrain &terrain); //UUSI
+    void placeOnTerrain(Terrain &terrain, int startX); //UUSI
     void move(float dx);
     sf::Vector2f getPosition() const; // Lisätään, jotta voidaan tarkistaa sijainti
     

@@ -7,12 +7,15 @@
 class Projectile {
 public:
     Projectile();
-    void update(float deltaTime, Terrain &terrain);
+    void update(float gravity, Terrain &terrain, float windForce);
+    void setGravity(float gravity);  // 🔥 Mahdollistaa yksittäisen painovoiman asetuksen
 
+    bool alive;
     sf::CircleShape shape;
     sf::Vector2f velocity;
-    bool alive;
-    float gravityEffect; // 🔥 Voiman vaikutus ammuksen lentoon
+    
+private:
+    float gravityEffect = 0.0005f;
 };
 
 
