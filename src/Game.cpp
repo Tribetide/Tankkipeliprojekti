@@ -3,29 +3,44 @@
 #include <Config.hpp>
 #include <cstdlib>  // satunnaislukujen generointi
 #include <ctime>    // ajan käyttö satunnaislukujen generointiin
+#include <filesystem> // C++17 tiedostopoluille
 #include <cmath>
+
+void printCurrentWorkingDirectory() {
+    std::cout << "Nykyinen hakemisto: " 
+              << std::filesystem::current_path() 
+              << std::endl;
+}
 
 Game::Game() 
     : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"),
-    gravity(0.0005f),
-    eventManager(tank1, tank2)
- 
+      gravity(0.0005f),
+      eventManager(tank1, tank2) 
 {
+    printCurrentWorkingDirectory(); // Tulostetaan nykyinen hakemisto
+
+    // Alustetaan maasto ja tankit
     terrain.initialize();
     tank1.placeOnTerrain(terrain, 350);
     tank2.placeOnTerrain(terrain, 950);
 
-
     // 🔥 Ladataan fontti kerran
-    if (!font.loadFromFile(Config::FONT_PATH)) {
-        std::cerr << "Fontin lataus epäonnistui! Etsitty polusta: " << Config::FONT_PATH << std::endl;
+    if (!font.loadFromFile(Config::FONT_PATH_1)) {
+        std::cerr << "Fontin lataus epäonnistui! Yritetään polkua: " << Config::FONT_PATH_2 << std::endl;
+    
+        if (!font.loadFromFile(Config::FONT_PATH_2)) {
+            std::cerr << "Fontin lataus epäonnistui! Yritetään polkua: " << Config::FONT_PATH_3 << std::endl;
+    
+            if (!font.loadFromFile(Config::FONT_PATH_3)) {
+                std::cerr << "Fontin lataus epäonnistui täysin! Tarkista polut ja varmista, että tiedosto on oikeassa paikassa." << std::endl;
+            }
+        }
     }
 
     // 🔥 Alustetaan satunnainen tuuli (-0.002f ja 0.002f välillä)
     std::srand(std::time(nullptr));
     windForce = (std::rand() % 200 - 100) / 50000.0f;
 }
-
 
 
 void Game::run() {
@@ -119,7 +134,6 @@ void Game::render() {
     sf::Text powerText("Voima: " + std::to_string(static_cast<int>(currentTank.getPower())), font, 20);
     powerText.setPosition(10, 40);
     window.draw(powerText);
-
 
     // 🔥 Pyöristetään tuulen arvo kokonaisluvuksi
     int windValue = static_cast<int>(std::round(std::abs(windForce) * 10000));

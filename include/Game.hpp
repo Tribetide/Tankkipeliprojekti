@@ -18,6 +18,8 @@ private:
     void render();
     void drawWindIndicator();
 
+    void drawWindIndicator();
+
 
     sf::RenderWindow window;
     Tank tank1;
