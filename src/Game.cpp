@@ -4,6 +4,7 @@
 #include <cstdlib>  // satunnaislukujen generointi
 #include <ctime>    // ajan käyttö satunnaislukujen generointiin
 #include <filesystem> // C++17 tiedostopoluille
+#include <cmath>
 
 
 void printCurrentWorkingDirectory() {
