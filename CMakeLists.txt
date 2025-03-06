@@ -22,3 +22,5 @@ add_executable(Tankkipeli ${SOURCES})
 # 🔹 Linkitetään SFML automaattisesti
 find_package(SFML 2.6 REQUIRED COMPONENTS graphics window system)
 target_link_libraries(Tankkipeli PRIVATE sfml-graphics sfml-window sfml-system)
+
+

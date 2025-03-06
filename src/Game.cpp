@@ -12,12 +12,17 @@ void printCurrentWorkingDirectory() {
               << std::endl;
 }
 
+Game::Game() 
+    : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"),
+      gravity(0.0005f),
+      eventManager(tank1, tank2) 
+{
+    printCurrentWorkingDirectory(); // Tulostetaan nykyinen hakemisto
 
-Game::Game() : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"), gravity(0.0005f) {
-    printCurrentWorkingDirectory(); // 🔥 Tulostetaan nykyinen hakemisto
+    // Alustetaan maasto ja tankit
     terrain.initialize();
-    tank.placeOnTerrain(terrain);
-
+    tank1.placeOnTerrain(terrain, 350);
+    tank2.placeOnTerrain(terrain, 950);
 
     // 🔥 Ladataan fontti kerran
     if (!font.loadFromFile(Config::FONT_PATH_1)) {
@@ -38,7 +43,6 @@ Game::Game() : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"),
 }
 
 
-
 void Game::run() {
     while (window.isOpen()) {
         processEvents();
@@ -53,21 +57,31 @@ void Game::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
+        // 🔥 Estetään toiminnot, jos odotetaan vuoron vaihtoa
+        if (waitingForTurnSwitch) 
+            return;
+
+            Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+
         if (event.type == sf::Event::KeyPressed) {
             if (event.key.code == sf::Keyboard::Left)
-                tank.rotateTurret(-5.0f);  // Kääntää tykkiä vasemmalle
+                activeTank.rotateTurret(-5.0f);  // Kääntää tykkiä vasemmalle
             if (event.key.code == sf::Keyboard::Right)
-                tank.rotateTurret(5.0f);   // Kääntää tykkiä oikealle
+                activeTank.rotateTurret(5.0f);   // Kääntää tykkiä oikealle
             if (event.key.code == sf::Keyboard::Up)
-                tank.adjustPower(5.0f);   // Lisää voimaa
+                activeTank.adjustPower(5.0f);   // Lisää voimaa
             if (event.key.code == sf::Keyboard::Down)
-                tank.adjustPower(-5.0f);  // Vähentää voimaa
-            if (event.key.code == sf::Keyboard::Space)
-                projectiles.push_back(tank.shoot());  // Ampuu
+                activeTank.adjustPower(-5.0f);  // Vähentää voimaa
             if (event.key.code == sf::Keyboard::A)
-                tank.move(-5.0f, terrain);  // Liiku vasemmalle
+                activeTank.move(-5.0f, terrain);  // Liiku vasemmalle
             if (event.key.code == sf::Keyboard::D)
-                tank.move(5.0f, terrain);   // Liiku oikealle
+                activeTank.move(5.0f, terrain);   // Liiku oikealle
+                
+            if (event.key.code == sf::Keyboard::Space) { // 🔥 Ammus laukaistaan
+                projectiles.push_back(activeTank.shoot());
+                turnClock.restart();  // 🔥 Käynnistetään ajastin
+                waitingForTurnSwitch = true;  // 🔥 Odotetaan vuoron vaihtoa
+            }
         }
     }
 }
@@ -76,11 +90,23 @@ void Game::processEvents() {
 
 
 void Game::update() {
-    for (auto &p : projectiles) {
-        p.update(gravity, terrain, windForce);  // 🔥 Päivitetty versio
+    // 🔥 Tarkista, onko 1.5 sekuntia kulunut ampumisen jälkeen
+    if (waitingForTurnSwitch && turnClock.getElapsedTime().asSeconds() >= 1.5f) {
+        eventManager.switchTurn();  // 🔥 Vaihdetaan vuoro 1.5 sekunnin jälkeen
+        waitingForTurnSwitch = false;  // 🔥 Nollataan odotustila
     }
 
-    tank.update(terrain, gravity); // Päivitetään tankin sijainti
+    // 🔥 Päivitä aktiivinen tankki
+    Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+    activeTank.update(terrain, gravity); 
+
+    // 🔥 Päivitä kaikki ammukset
+    for (auto &p : projectiles) {
+        p.update(gravity, terrain, windForce);
+        if (p.alive) {
+            eventManager.handleShot(p, terrain);
+        }
+    }
 }
 
 
@@ -88,18 +114,29 @@ void Game::update() {
 void Game::render() {
     window.clear();
     terrain.draw(window);
-    tank.draw(window);
+
+    tank1.draw(window);
+    tank2.draw(window);
 
     for (auto &p : projectiles) {
         if (p.alive) window.draw(p.shape);
     }
 
+    // Hae vuorossa oleva tankki
+    Tank &currentTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
 
-    sf::Text angleText("Kulma: " + std::to_string((int)tank.getAngle()), font, 20);
+    // Piirretään vuoroteksti
+    sf::Text turnText("Vuoro: " + std::string((eventManager.getCurrentTurn() == 0) ? "Pelaaja 1" : "Pelaaja 2"), font, 20);
+    turnText.setPosition(150, 10);
+    window.draw(turnText);
+
+    // Piirretään kulmateksti
+    sf::Text angleText("Kulma: " + std::to_string(static_cast<int>(currentTank.getAngle())), font, 20);
     angleText.setPosition(10, 10);
     window.draw(angleText);
 
-    sf::Text powerText("Voima: " + std::to_string((int)tank.getPower()), font, 20);
+    // Piirretään voimateksti
+    sf::Text powerText("Voima: " + std::to_string(static_cast<int>(currentTank.getPower())), font, 20);
     powerText.setPosition(10, 40);
     window.draw(powerText);
 
@@ -113,7 +150,6 @@ void Game::render() {
 
     // 🔥 Piirretään tuuli-indikaattori nuolena
     drawWindIndicator();
-
     window.display();
 }
 
@@ -146,4 +182,3 @@ void Game::drawWindIndicator() {
 
     window.draw(arrowHead);
 }
-

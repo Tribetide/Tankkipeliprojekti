@@ -79,7 +79,6 @@ void Terrain::initialize() {
     sprite.setTexture(texture);
     sprite.setPosition(0, 0);
 }
-
 void Terrain::createSky() {
     // 🔥 Puolikuu (kaksi ympyrää päällekkäin)
     moon.setRadius(90);
@@ -95,8 +94,6 @@ void Terrain::createSky() {
     }
 }
 
-
-
 void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
     // 🔥 Piirretään kuu
     window.draw(moon);
@@ -108,7 +105,7 @@ void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
         starShape.setPosition(star);
         window.draw(starShape);
     }
-
+    
     window.draw(sprite);  // 🔥 Piirretään sprite
 } 
 
