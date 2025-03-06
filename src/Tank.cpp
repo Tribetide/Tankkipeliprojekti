@@ -29,11 +29,40 @@ void Tank::draw(sf::RenderWindow &window) {
 }
 
 
-void Tank::move(float dx) {
+void Tank::move(float dx, Terrain &terrain) {
     upperBody.move(dx, 0);
     lowerBody.move(dx, 0);
     turret.move(dx, 0);
+
+    // 🔥 Tarkistetaan, että tankki on maaston päällä
+    sf::Vector2f position = upperBody.getPosition();
+
+    for (int i = 0; i < 1080; i++) { // 🔥 Käydään läpi korkeudet
+        if (terrain.checkCollision(sf::Vector2f(position.x + 30, i))) {
+            // 🔥 Jos löytyy maata, sijoitetaan tankki sen päälle
+            float newY = i - 40; // 🔥 Säädetään tankin korkeus
+            upperBody.setPosition(position.x, newY);
+            lowerBody.setPosition(position.x - 15, newY + 30);
+            turret.setPosition(position.x + 25, newY);
+            return;
+        }
+    }
 }
+
+
+void Tank::update(Terrain &terrain, float gravity) {
+    sf::Vector2f position = upperBody.getPosition();
+    float moveAmount = gravity * 550.0f; // 🔥 Testataan suuremmalla arvolla
+
+    // 🔥 Tarkistetaan, onko tankin alla vielä maata
+    if (!terrain.checkCollision(sf::Vector2f(position.x + 30, position.y + 45))) {
+        upperBody.move(0, moveAmount);
+        lowerBody.move(0, moveAmount);
+        turret.move(0, moveAmount);
+    }
+}
+
+
 
 sf::Vector2f Tank::getPosition() const {
     return upperBody.getPosition();

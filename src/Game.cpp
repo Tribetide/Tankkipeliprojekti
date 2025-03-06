@@ -4,7 +4,7 @@
 #include <cstdlib>  // satunnaislukujen generointi
 #include <ctime>    // ajan käyttö satunnaislukujen generointiin
 #include <filesystem> // C++17 tiedostopoluille
-
+#include <cmath>  // Matematiikkakirjasto
 
 void printCurrentWorkingDirectory() {
     std::cout << "Nykyinen hakemisto: " 
@@ -65,9 +65,9 @@ void Game::processEvents() {
             if (event.key.code == sf::Keyboard::Space)
                 projectiles.push_back(tank.shoot());  // Ampuu
             if (event.key.code == sf::Keyboard::A)
-                tank.move(-5.0f);  // Liiku vasemmalle
+                tank.move(-5.0f, terrain);  // Liiku vasemmalle
             if (event.key.code == sf::Keyboard::D)
-                tank.move(5.0f);   // Liiku oikealle
+                tank.move(5.0f, terrain);   // Liiku oikealle
         }
     }
 }
@@ -79,6 +79,8 @@ void Game::update() {
     for (auto &p : projectiles) {
         p.update(gravity, terrain, windForce);  // 🔥 Päivitetty versio
     }
+
+    tank.update(terrain, gravity); // Päivitetään tankin sijainti
 }
 
 
