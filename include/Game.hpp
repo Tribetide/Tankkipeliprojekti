@@ -2,7 +2,6 @@
 #define GAME_HPP
 
 #include <SFML/Graphics.hpp>
-
 #include "Tank.hpp"
 #include "Terrain.hpp"
 #include "Projectile.hpp"
@@ -31,6 +30,11 @@ private:
 
     sf::Font font; // 🔥 Lisätään globaali fontti
     EventManager eventManager;
+
+
+    sf::Clock turnClock;  // 🔥 Ajastin vuoron vaihtoa varten
+    bool waitingForTurnSwitch = false;  // 🔥 Indikaattori, odotetaanko vuoron vaihtoa
+
 };
 
 #endif

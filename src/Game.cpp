@@ -42,6 +42,10 @@ void Game::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
+        // 🔥 Estetään toiminnot, jos odotetaan vuoron vaihtoa
+        if (waitingForTurnSwitch) 
+            return;
+
             Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
 
         if (event.type == sf::Event::KeyPressed) {
@@ -59,7 +63,12 @@ void Game::processEvents() {
                 activeTank.move(-5.0f);  // Liiku vasemmalle
             if (event.key.code == sf::Keyboard::D)
                 activeTank.move(5.0f);   // Liiku oikealle
-                isPlayerOneTurn = !isPlayerOneTurn; // Vuoron vaihto
+                
+            if (event.key.code == sf::Keyboard::Space) { // 🔥 Ammus laukaistaan
+                projectiles.push_back(activeTank.shoot());
+                turnClock.restart();  // 🔥 Käynnistetään ajastin
+                waitingForTurnSwitch = true;  // 🔥 Odotetaan vuoron vaihtoa
+            }
         }
     }
 }
@@ -68,10 +77,16 @@ void Game::processEvents() {
 
 
 void Game::update() {
+    // 🔥 Tarkista, onko 3 sekuntia kulunut ampumisen jälkeen
+    if (waitingForTurnSwitch && turnClock.getElapsedTime().asSeconds() >= 1.5f) {
+        eventManager.switchTurn();  // 🔥 Vaihdetaan vuoro 1.5 sekunnin jälkeen
+        waitingForTurnSwitch = false;  // 🔥 Nollataan odotustila
+    }
+
     for (auto &p : projectiles) {
-        p.update(gravity, terrain, windForce);  // 🔥 Päivitetty versio
+        p.update(gravity, terrain, windForce);
         if (p.alive) {
-            eventManager.handleShot(p, terrain);  // Käsitellään mahdollinen osuma
+            eventManager.handleShot(p, terrain);
         }
     }
 }
