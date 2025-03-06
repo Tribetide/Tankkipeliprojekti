@@ -73,9 +73,9 @@ void Game::processEvents() {
             if (event.key.code == sf::Keyboard::Down)
                 activeTank.adjustPower(-5.0f);  // Vähentää voimaa
             if (event.key.code == sf::Keyboard::A)
-                activeTank.move(-5.0f);  // Liiku vasemmalle
+                activeTank.move(-5.0f, terrain);  // Liiku vasemmalle
             if (event.key.code == sf::Keyboard::D)
-                activeTank.move(5.0f);   // Liiku oikealle
+                activeTank.move(5.0f, terrain);   // Liiku oikealle
                 
             if (event.key.code == sf::Keyboard::Space) { // 🔥 Ammus laukaistaan
                 projectiles.push_back(activeTank.shoot());
@@ -90,12 +90,17 @@ void Game::processEvents() {
 
 
 void Game::update() {
-    // 🔥 Tarkista, onko 3 sekuntia kulunut ampumisen jälkeen
+    // 🔥 Tarkista, onko 1.5 sekuntia kulunut ampumisen jälkeen
     if (waitingForTurnSwitch && turnClock.getElapsedTime().asSeconds() >= 1.5f) {
         eventManager.switchTurn();  // 🔥 Vaihdetaan vuoro 1.5 sekunnin jälkeen
         waitingForTurnSwitch = false;  // 🔥 Nollataan odotustila
     }
 
+    // 🔥 Päivitä aktiivinen tankki
+    Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+    activeTank.update(terrain, gravity); 
+
+    // 🔥 Päivitä kaikki ammukset
     for (auto &p : projectiles) {
         p.update(gravity, terrain, windForce);
         if (p.alive) {
@@ -103,6 +108,7 @@ void Game::update() {
         }
     }
 }
+
 
 
 void Game::render() {

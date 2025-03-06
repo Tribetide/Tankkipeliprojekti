@@ -36,6 +36,7 @@ Terrain::Terrain() {}
 
 void Terrain::initialize() {
     std::srand(std::time(nullptr)); // Satunnaislukugeneraattorin alustus
+    createSky(); // Luodaan kuu ja tähdet
     terrainImage.create(1920, 1080, sf::Color::Transparent);
 
     int groundHeight[1920]; // Taulukko maaston korkeuksille
@@ -79,8 +80,33 @@ void Terrain::initialize() {
     sprite.setPosition(0, 0);
 }
 
+void Terrain::createSky() {
+    // 🔥 Puolikuu (kaksi ympyrää päällekkäin)
+    moon.setRadius(90);
+    moon.setFillColor(sf::Color(255, 255, 200)); // Keltainen kuu
+    moon.setPosition(1600, 100); // Kuun sijainti
+
+    // ⭐ Luodaan satunnaisia tähtiä
+    stars.clear();
+    for (int i = 0; i < 50; i++) {
+        float x = std::rand() % 1920;
+        float y = std::rand() % 400; // ⭐ Tähtien korkeus
+        stars.push_back(sf::Vector2f(x, y));
+    }
+}
 
 void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
+    // 🔥 Piirretään kuu
+    window.draw(moon);
+
+    // 🔥 Piirretään tähdet
+    for (const auto& star : stars) {
+        sf::CircleShape starShape(2);
+        starShape.setFillColor(sf::Color::White);
+        starShape.setPosition(star);
+        window.draw(starShape);
+    }
+    
     window.draw(sprite);  // 🔥 Piirretään sprite
 } 
 
