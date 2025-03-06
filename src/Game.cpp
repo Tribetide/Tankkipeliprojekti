@@ -105,7 +105,6 @@ void Game::update() {
 }
 
 
-
 void Game::render() {
     window.clear();
     terrain.draw(window);
@@ -145,7 +144,6 @@ void Game::render() {
 
     // 🔥 Piirretään tuuli-indikaattori nuolena
     drawWindIndicator();
-
     window.display();
 }
 
