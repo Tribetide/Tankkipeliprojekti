@@ -57,8 +57,6 @@ void Game::processEvents() {
                 activeTank.adjustPower(5.0f);   // Lisää voimaa
             if (event.key.code == sf::Keyboard::Down)
                 activeTank.adjustPower(-5.0f);  // Vähentää voimaa
-            if (event.key.code == sf::Keyboard::Space)
-                projectiles.push_back(activeTank.shoot());  // Ampuu
             if (event.key.code == sf::Keyboard::A)
                 activeTank.move(-5.0f);  // Liiku vasemmalle
             if (event.key.code == sf::Keyboard::D)
