@@ -16,6 +16,8 @@ private:
     void processEvents();
     void update();
     void render();
+    void drawWindIndicator();
+
 
     sf::RenderWindow window;
     Tank tank;

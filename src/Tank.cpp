@@ -42,8 +42,8 @@ sf::Vector2f Tank::getPosition() const {
 
 void Tank::rotateTurret(float angleDelta) {
     angle += angleDelta;
-    if (angle < 0) angle = 0;   // 🔥 Korjataan ala-arvo, jotta se ei ala 40°
-    if (angle > 180) angle = 180; // 🔥 180° on maksimi, koska tykki ei käänny taaksepäin
+    if (angle < 0) angle += 360;   // Jos kulma menee negatiiviseksi, lisätään 360 astetta 
+    if (angle > 360) angle -= 360; // Jos kulma menee yli 360, vähennetään 360 astetta
 
     turret.setRotation(angle - 90.0f); // 🔥 SFML käyttää myötäpäiväistä kiertoa
 

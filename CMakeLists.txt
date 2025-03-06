@@ -10,6 +10,12 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # 🔹 Etsitään kaikki lähdetiedostot src-kansiosta
 file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
+# Kopioi fontit build-kansioon
+file(COPY assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/assets)
+
+# Kopioi fontit myös Debug-kansioon
+file(COPY assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
+
 # 🔹 Luodaan suoritettava ohjelma
 add_executable(Tankkipeli ${SOURCES})
 
