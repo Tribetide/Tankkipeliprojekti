@@ -20,6 +20,9 @@ private:
 
 
     sf::RenderWindow window;
+    sf::Texture moonTexture;
+    sf::Sprite moonSprite;
+
     Tank tank;
     Terrain terrain;
     std::vector<Projectile> projectiles;

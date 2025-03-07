@@ -18,6 +18,14 @@ Game::Game() : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"),
     terrain.initialize();
     tank.placeOnTerrain(terrain);
 
+    if (!moonTexture.loadFromFile("../assets/moon.png")) {
+        std::cerr << "Kuun tekstuurin lataus epäonnistui!" << std::endl;
+    }
+    moonSprite.setTexture(moonTexture);
+    moonSprite.setPosition(1600, 100); // Säädä sijaintia
+    moonSprite.setScale(0.6f, 0.6f);   // Säädä kokoa
+    
+
 
     // 🔥 Ladataan fontti kerran
     if (!font.loadFromFile(Config::FONT_PATH_1)) {
@@ -76,6 +84,9 @@ void Game::processEvents() {
 
 
 void Game::update() {
+    float deltaTime = 0.9f / 60.0f; // Oletetaan 60 FPS, voit laskea oikean ajan tarvittaessa
+
+    terrain.update(deltaTime); // 🔥 Päivitetään tähdenlennot
     for (auto &p : projectiles) {
         p.update(gravity, terrain, windForce);  // 🔥 Päivitetty versio
     }
@@ -87,6 +98,7 @@ void Game::update() {
 
 void Game::render() {
     window.clear();
+    window.draw(moonSprite);
     terrain.draw(window);
     tank.draw(window);
 
