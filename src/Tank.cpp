@@ -98,8 +98,8 @@ void Tank::rotateTurret(float angleDelta) {
     turret.setPosition(upperBody.getPosition().x + 25, upperBody.getPosition().y);
 }
 
-void Tank::placeOnTerrain(Terrain &terrain) {
-    int startX = 350; // Alkuperäinen X-sijainti
+void Tank::placeOnTerrain(Terrain &terrain, int startX) {
+//    int startX = 350; // Alkuperäinen X-sijainti
     int y = 0;
 
     // Etsitään korkein piste, jossa maasto ei ole läpinäkyvä
@@ -161,9 +161,3 @@ Projectile Tank::shoot() {
     p.alive = true;
     return p;
 }
-
-
-
-
-
-

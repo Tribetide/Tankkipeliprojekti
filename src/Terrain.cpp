@@ -95,8 +95,6 @@ void Terrain::createSky() {
     }
 }
 
-
-
 void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
 
     for (const auto& star : stars) {
@@ -126,6 +124,7 @@ void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
         window.draw(shootingStar);
     }
 
+    
     window.draw(sprite);  // 🔥 Piirretään sprite
 } 
 
