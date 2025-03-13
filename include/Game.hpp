@@ -23,6 +23,10 @@ private:
     Tank tank1;
     Tank tank2;
     bool isPlayerOneTurn; // Vuorottelua
+    sf::Texture moonTexture;
+    sf::Sprite moonSprite;
+
+
     Terrain terrain;
     std::vector<Projectile> projectiles;
     float gravity; // 🔥  painovoima

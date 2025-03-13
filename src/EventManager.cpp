@@ -1,8 +1,21 @@
 #include "EventManager.hpp"
 #include <iostream>
+#include <cstdlib>   // 🔥 Satunnaislukujen generointiin
+#include <ctime>     // 🔥 Aikasiemen satunnaislukujen alustamiseen
+#include <cmath>
+
+float EventManager::getTimeLeft() const {
+    // 🔥 Jos ajastin on pysäytetty, näytetään jäljellä oleva aika tallennetusta arvosta
+    float timeLeft = TURN_TIME_LIMIT - (turnTimerPaused ? pausedTime : turnClock.getElapsedTime().asSeconds());
+    return std::max(0, static_cast<int>(std::floor(timeLeft)));
+}
 
 EventManager::EventManager(Tank &t1, Tank &t2) 
-    : tank1(t1), tank2(t2), currentTank(0) {}  // Pelaaja 1 aloittaa
+    : tank1(t1), tank2(t2) {
+    std::srand(static_cast<unsigned>(std::time(nullptr)));  // 🔥 Alustetaan satunnaislukugeneraattori
+    currentTank = std::rand() % 2;  // 🔥 Arvotaan 0 (tank1) tai 1 (tank2)
+    turnClock.restart(); // 🔥 Aloitetaan vuoroajastin
+}
 
     void EventManager::handleShot(Projectile &projectile, Terrain &terrain) {
         if (!projectile.alive) return;  // 🔥 Jos ammus on jo "kuollut", älä käsittele uudelleen
@@ -23,15 +36,57 @@ EventManager::EventManager(Tank &t1, Tank &t2)
     
         // 🔥 Jos ammus kuoli nyt, vaihda vuoro
         if (!projectile.alive) {
-            switchTurn();
+            waitingForTurnSwitch = true;  // 🔥 Odotetaan ennen vuoron vaihtoa
+            turnSwitchClock.restart();  // 🔥 Käynnistetään viivekello
         }
     }
-    
+
+void EventManager::update(const std::vector<Projectile>& projectiles) {
+    if (waitingForTurnSwitch) {
+        if (turnSwitchClock.getElapsedTime().asSeconds() >= 2.0f) {  
+            switchTurn();
+            waitingForTurnSwitch = false;
+        }
+    } 
+    // 🔥 Ajastin on mennyt nollaan, mutta tarkistetaan, onko ammus elossa
+    else if (!turnTimerPaused && turnClock.getElapsedTime().asSeconds() > TURN_TIME_LIMIT) {
+        if (!anyProjectilesAlive(projectiles)) {  
+            switchTurn();
+        } 
+        // 🔥 Jos ammus on yhä ilmassa, ei tehdä mitään – odotetaan sen putoamista
+    }
+}
+
+
 
 void EventManager::switchTurn() {
     currentTank = (currentTank == 0) ? 1 : 0;
+    turnClock.restart();
 }
 
 int EventManager::getCurrentTurn() const {
     return currentTank;
+}
+
+void EventManager::stopTurnTimer() {
+    if (!turnTimerPaused) {
+        pausedTime = turnClock.getElapsedTime().asSeconds();  // 🔥 Tallennetaan kulunut aika
+        turnTimerPaused = true;
+    }
+}
+
+void EventManager::restartTurnTimer() {
+    turnClock.restart();
+    turnTimerPaused = false;  // 🔥 Nollataan tauko
+}
+
+bool EventManager::isTurnTimerPaused() const {
+    return turnTimerPaused;
+}
+
+bool EventManager::anyProjectilesAlive(const std::vector<Projectile>& projectiles) const {
+    for (const auto &p : projectiles) {
+        if (p.alive) return true;
+    }
+    return false;
 }

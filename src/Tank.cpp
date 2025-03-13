@@ -28,26 +28,44 @@ void Tank::draw(sf::RenderWindow &window) {
     window.draw(turret); // 🔥 Piirrä tykki lopuksi
 }
 
-
 void Tank::move(float dx, Terrain &terrain) {
-    upperBody.move(dx, 0);
-    lowerBody.move(dx, 0);
-    turret.move(dx, 0);
+    sf::Vector2f oldPosition = upperBody.getPosition();
+    sf::Vector2f newPosition = oldPosition;
+    newPosition.x += dx; // Uusi X-koordinaatti
 
-    // 🔥 Tarkistetaan, että tankki on maaston päällä
-    sf::Vector2f position = upperBody.getPosition();
+    // Selvitetään uuden sijainnin korkeus
+    float oldHeight = 0, newHeight = 0;
 
-    for (int i = 0; i < 1080; i++) { // 🔥 Käydään läpi korkeudet
-        if (terrain.checkCollision(sf::Vector2f(position.x + 30, i))) {
-            // 🔥 Jos löytyy maata, sijoitetaan tankki sen päälle
-            float newY = i - 40; // 🔥 Säädetään tankin korkeus
-            upperBody.setPosition(position.x, newY);
-            lowerBody.setPosition(position.x - 15, newY + 30);
-            turret.setPosition(position.x + 25, newY);
-            return;
+    for (int i = 0; i < 1080; i++) {
+        if (terrain.checkCollision(sf::Vector2f(oldPosition.x + 30, i))) {
+            oldHeight = i;  // Vanha korkeus
+            break;
         }
     }
+
+    for (int i = 0; i < 1080; i++) {
+        if (terrain.checkCollision(sf::Vector2f(newPosition.x + 30, i))) {
+            newHeight = i;  // Uusi korkeus
+            break;
+        }
+    }
+
+    // Lasketaan kaltevuus
+    float slope = std::abs(newHeight - oldHeight);
+
+    // Jos mäki on liian jyrkkä, estetään liike
+    const float MAX_SLOPE = 25.0f;  // Säädä tätä sopivaksi
+    if (slope > MAX_SLOPE) {
+        return; // Liian jyrkkä, ei liikuta
+    }
+
+    // Jos mäki on riittävän loiva, siirretään tankki
+    float adjustedY = newHeight - 40; // Tankin korkeus suhteessa maastoon
+    upperBody.setPosition(newPosition.x, adjustedY);
+    lowerBody.setPosition(newPosition.x - 15, adjustedY + 30);
+    turret.setPosition(newPosition.x + 25, adjustedY);
 }
+
 
 
 void Tank::update(Terrain &terrain, float gravity) {
@@ -61,6 +79,8 @@ void Tank::update(Terrain &terrain, float gravity) {
         turret.move(0, moveAmount);
     }
 }
+
+
 
 sf::Vector2f Tank::getPosition() const {
     return upperBody.getPosition();
@@ -140,4 +160,24 @@ Projectile Tank::shoot() {
 
     p.alive = true;
     return p;
+}
+
+void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain, std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, sf::Clock &turnClock) {
+    if (key == sf::Keyboard::Left)
+        rotateTurret(-5.0f);  // 🔥 Kääntää tykkiä vasemmalle
+    else if (key == sf::Keyboard::Right)
+        rotateTurret(5.0f);   // 🔥 Kääntää tykkiä oikealle
+    else if (key == sf::Keyboard::Up)
+        adjustPower(5.0f);   // 🔥 Lisää ammuksen lähtövoimaa
+    else if (key == sf::Keyboard::Down)
+        adjustPower(-5.0f);  // 🔥 Vähentää ammuksen lähtövoimaa
+    else if (key == sf::Keyboard::A)
+        move(-5.0f, terrain);  // 🔥 Siirtää tankkia vasemmalle, huomioiden maaston
+    else if (key == sf::Keyboard::D)
+        move(5.0f, terrain);   // 🔥 Siirtää tankkia oikealle, huomioiden maaston
+    else if (key == sf::Keyboard::Space) { // 🔥 Ammus laukaistaan
+        projectiles.push_back(shoot());  // 🔥 Luodaan uusi ammus ja lisätään se listaan
+        turnClock.restart();  // 🔥 Käynnistetään ajastin vuoronvaihtoa varten
+        waitingForTurnSwitch = true;  // 🔥 Estetään uuden ampumisen suorittaminen ennen vuoron vaihtumista
+    }
 }

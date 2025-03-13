@@ -6,33 +6,6 @@ Terrain::Terrain() {}
 #include <cstdlib>
 #include <ctime>
 
-// void Terrain::initialize() {
-//     std::srand(std::time(nullptr)); // Satunnaislukugeneraattorin alustus
-//     terrainImage.create(1920, 1080, sf::Color::Transparent);
-
-//     int groundHeight[1920]; // Taulukko maaston korkeuksille
-
-//     // **Luodaan satunnainen maasto käyttäen siniaaltoa ja satunnaista vaihtelua**
-//     for (int x = 0; x < terrainImage.getSize().x; x++) {
-//         float frequency = 0.005f; // Maaston "aallonpituus"
-//         float amplitude = 100.0f; // Maaston korkeusvaihtelut
-//         int baseHeight = 600; // Peruskorkeus
-//         int randomOffset = std::rand() % 5 - 2; // Satunnainen vaihtelu
-
-//         groundHeight[x] = baseHeight + std::sin(x * frequency) * amplitude + randomOffset;
-//     }
-
-//     // **Täytetään maasto vihreällä**
-//     for (int x = 0; x < terrainImage.getSize().x; x++) {
-//         for (int y = groundHeight[x]; y < terrainImage.getSize().y; y++) {
-//             terrainImage.setPixel(x, y, sf::Color::Green);
-//         }
-//     }
-
-//     texture.loadFromImage(terrainImage);
-//     sprite.setTexture(texture);
-//     sprite.setPosition(0, 0);
-// }
 
 void Terrain::initialize() {
     std::srand(std::time(nullptr)); // Satunnaislukugeneraattorin alustus
@@ -80,11 +53,38 @@ void Terrain::initialize() {
     sprite.setPosition(0, 0);
 }
 
+void Terrain::update(float deltaTime) {
+    shootingStarTimer += deltaTime;
+
+    if (shootingStarTimer >= 55.0f) {
+        ShootingStar star;
+        star.position = sf::Vector2f(std::rand() % 1920, std::rand() % 200); // Satunnainen aloituspaikka
+        star.velocity = sf::Vector2f(-150.0f + (std::rand() % 100), 50.0f); // 🔥 Hidastettu nopeus!
+        star.lifetime = 2.0f;
+
+        shootingStars.push_back(star);
+        shootingStarTimer = 0.0f;
+    }
+
+    for (auto &star : shootingStars) {
+        star.previousPositions.push_back(star.position); // 🔥 Talletetaan vanha sijainti häntää varten
+        if (star.previousPositions.size() > 40) { // Rajataan häntä 10 osaan
+            star.previousPositions.erase(star.previousPositions.begin());
+        }
+
+        star.position += star.velocity * deltaTime;
+        star.lifetime -= deltaTime;
+    }
+
+    shootingStars.erase(
+        std::remove_if(shootingStars.begin(), shootingStars.end(),
+                       [](const ShootingStar &s) { return s.lifetime <= 0; }),
+        shootingStars.end());
+}
+
+
+
 void Terrain::createSky() {
-    // 🔥 Puolikuu (kaksi ympyrää päällekkäin)
-    moon.setRadius(90);
-    moon.setFillColor(sf::Color(255, 255, 200)); // Keltainen kuu
-    moon.setPosition(1600, 100); // Kuun sijainti
 
     // ⭐ Luodaan satunnaisia tähtiä
     stars.clear();
@@ -96,16 +96,34 @@ void Terrain::createSky() {
 }
 
 void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
-    // 🔥 Piirretään kuu
-    window.draw(moon);
 
-    // 🔥 Piirretään tähdet
     for (const auto& star : stars) {
         sf::CircleShape starShape(2);
         starShape.setFillColor(sf::Color::White);
         starShape.setPosition(star);
         window.draw(starShape);
     }
+
+
+    // 🌠 Piirretään tähdenlennot ja niiden hännät
+    for (const auto& star : shootingStars) {
+        float alphaStep = 1.0f / star.previousPositions.size(); // 🔥 Parempi haalistuminen
+
+        for (size_t i = 0; i < star.previousPositions.size(); i++) {
+            sf::CircleShape tail(5 - i * 0.2f); // 🔥 Pienenevä häntä
+            int alpha = std::max(0, static_cast<int>(255 - i * alphaStep)); // 🔥 Pehmeä haalistuminen
+            tail.setFillColor(sf::Color(255, 255, 255, alpha));
+            tail.setPosition(star.previousPositions[i]);
+            window.draw(tail);
+        }
+
+        sf::RectangleShape shootingStar(sf::Vector2f(10, 2));
+        shootingStar.setFillColor(sf::Color::White);
+        shootingStar.setPosition(star.position);
+        shootingStar.setRotation(30.0f);
+        window.draw(shootingStar);
+    }
+
     
     window.draw(sprite);  // 🔥 Piirretään sprite
 } 
@@ -145,5 +163,4 @@ void Terrain::destroy(sf::Vector2f position, int baseRadius) {
     // 🔥 Muista päivittää tekstuuri!
     texture.update(terrainImage);
 }
-
 

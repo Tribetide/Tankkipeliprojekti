@@ -1,10 +1,11 @@
 #include <iostream>
 #include "Game.hpp"
+#include "UI.hpp"
 #include <Config.hpp>
 #include <cstdlib>  // satunnaislukujen generointi
 #include <ctime>    // ajan käyttö satunnaislukujen generointiin
 #include <filesystem> // C++17 tiedostopoluille
-#include <cmath>
+#include <cmath>  // Matematiikkakirjasto
 
 void printCurrentWorkingDirectory() {
     std::cout << "Nykyinen hakemisto: " 
@@ -21,8 +22,18 @@ Game::Game()
 
     // Alustetaan maasto ja tankit
     terrain.initialize();
-    tank1.placeOnTerrain(terrain, 350);
-    tank2.placeOnTerrain(terrain, 950);
+    tank1.placeOnTerrain(terrain, 100);
+    tank2.placeOnTerrain(terrain, 1800);
+   
+
+    if (!moonTexture.loadFromFile("../assets/moon.png")) {
+        std::cerr << "Kuun tekstuurin lataus epäonnistui!" << std::endl;
+    }
+    moonSprite.setTexture(moonTexture);
+    moonSprite.setPosition(1600, 100); // Säädä sijaintia
+    moonSprite.setScale(0.6f, 0.6f);   // Säädä kokoa
+    
+
 
     // 🔥 Ladataan fontti kerran
     if (!font.loadFromFile(Config::FONT_PATH_1)) {
@@ -63,56 +74,56 @@ void Game::processEvents() {
 
             Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
 
-        if (event.type == sf::Event::KeyPressed) {
-            if (event.key.code == sf::Keyboard::Left)
-                activeTank.rotateTurret(-5.0f);  // Kääntää tykkiä vasemmalle
-            if (event.key.code == sf::Keyboard::Right)
-                activeTank.rotateTurret(5.0f);   // Kääntää tykkiä oikealle
-            if (event.key.code == sf::Keyboard::Up)
-                activeTank.adjustPower(5.0f);   // Lisää voimaa
-            if (event.key.code == sf::Keyboard::Down)
-                activeTank.adjustPower(-5.0f);  // Vähentää voimaa
-            if (event.key.code == sf::Keyboard::A)
-                activeTank.move(-5.0f, terrain);  // Liiku vasemmalle
-            if (event.key.code == sf::Keyboard::D)
-                activeTank.move(5.0f, terrain);   // Liiku oikealle
-                
-            if (event.key.code == sf::Keyboard::Space) { // 🔥 Ammus laukaistaan
-                projectiles.push_back(activeTank.shoot());
-                turnClock.restart();  // 🔥 Käynnistetään ajastin
-                waitingForTurnSwitch = true;  // 🔥 Odotetaan vuoron vaihtoa
-            }
+            if (event.type == sf::Event::KeyPressed) {
+                activeTank.handleInput(event.key.code, terrain, projectiles, waitingForTurnSwitch, turnClock);
         }
     }
 }
 
-
-
-
 void Game::update() {
-    // 🔥 Tarkista, onko 1.5 sekuntia kulunut ampumisen jälkeen
-    if (waitingForTurnSwitch && turnClock.getElapsedTime().asSeconds() >= 1.5f) {
-        eventManager.switchTurn();  // 🔥 Vaihdetaan vuoro 1.5 sekunnin jälkeen
-        waitingForTurnSwitch = false;  // 🔥 Nollataan odotustila
+    if (waitingForTurnSwitch) {
+        if (turnClock.getElapsedTime().asSeconds() >= 2.0f && !eventManager.anyProjectilesAlive(projectiles)) {
+            eventManager.switchTurn();
+            waitingForTurnSwitch = false;
+            eventManager.restartTurnTimer();
+        }
     }
+
+    // 🔥 Päivitä eventManager ja anna sille projektiililista
+    eventManager.update(projectiles);
+
 
     // 🔥 Päivitä aktiivinen tankki
     Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
     activeTank.update(terrain, gravity); 
 
     // 🔥 Päivitä kaikki ammukset
+    float deltaTime = 0.9f / 60.0f; // Oletetaan 60 FPS, voit laskea oikean ajan tarvittaessa
+
+    terrain.update(deltaTime); // 🔥 Päivitetään tähdenlennot
+
     for (auto &p : projectiles) {
+ //       std::cout << "Ammus y: " << p.shape.getPosition().y                   // Oli vain debuaggausta varten :D 
+ //       << " | Ammus x: " << p.shape.getPosition().x << std::endl;
         p.update(gravity, terrain, windForce);
         if (p.alive) {
             eventManager.handleShot(p, terrain);
         }
     }
-}
 
+    // 🔥 Poista kuolleet ammukset listasta
+    projectiles.erase(
+        std::remove_if(projectiles.begin(), projectiles.end(), [](const Projectile &p) {
+            return !p.alive;
+        }),
+        projectiles.end()
+    );
+}
 
 
 void Game::render() {
     window.clear();
+    window.draw(moonSprite);
     terrain.draw(window);
 
     tank1.draw(window);
@@ -125,60 +136,13 @@ void Game::render() {
     // Hae vuorossa oleva tankki
     Tank &currentTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
 
-    // Piirretään vuoroteksti
-    sf::Text turnText("Vuoro: " + std::string((eventManager.getCurrentTurn() == 0) ? "Pelaaja 1" : "Pelaaja 2"), font, 20);
-    turnText.setPosition(150, 10);
-    window.draw(turnText);
+    // Kutsutaan UI-piirtämisen funktioita
+    UI::drawTurnText(window, font, eventManager);
+    UI::drawTurnTimer(window, font, eventManager);    
+    UI::drawAngleText(window, font, currentTank);
+    UI::drawPowerText(window, font, currentTank);
+    UI::drawWindText(window, font, windForce);
+    UI::drawWindIndicator(window, windForce);
 
-    // Piirretään kulmateksti
-    sf::Text angleText("Kulma: " + std::to_string(static_cast<int>(currentTank.getAngle())), font, 20);
-    angleText.setPosition(10, 10);
-    window.draw(angleText);
-
-    // Piirretään voimateksti
-    sf::Text powerText("Voima: " + std::to_string(static_cast<int>(currentTank.getPower())), font, 20);
-    powerText.setPosition(10, 40);
-    window.draw(powerText);
-
-    // 🔥 Pyöristetään tuulen arvo kokonaisluvuksi
-    int windValue = static_cast<int>(std::round(std::abs(windForce) * 10000));
-
-    // 🔥 Näytetään kokonaislukuna ruudulla
-    sf::Text windText("Tuuli: " + std::to_string(windValue) + " m/s", font, 20);
-    windText.setPosition(10, 70);
-    window.draw(windText);
-
-    // 🔥 Piirretään tuuli-indikaattori nuolena
-    drawWindIndicator();
     window.display();
-}
-
-void Game::drawWindIndicator() {
-    float windStrength = std::abs(windForce) * 10000;  // 🔥 Skaalataan tuulen pituus
-    float startX = 50;  // 🔥 Nuolen aloituspiste
-    float startY = 120;
-    float endX = startX + (windForce * 10000);  // 🔥 Pituus ja suunta
-    float endY = startY;
-
-    sf::VertexArray windArrow(sf::Lines, 2);
-    windArrow[0].position = sf::Vector2f(startX, startY);
-    windArrow[0].color = sf::Color::White;
-    windArrow[1].position = sf::Vector2f(endX, endY);
-    windArrow[1].color = sf::Color::White;
-
-    window.draw(windArrow);
-
-    // 🔥 Lisätään iso nuolenpää (kolmio)
-    sf::ConvexShape arrowHead;
-    arrowHead.setPointCount(3); // 🔥 Kolmio
-    arrowHead.setPoint(0, sf::Vector2f(0, -6));  // Yläosa
-    arrowHead.setPoint(1, sf::Vector2f(12, 0));   // Oikea alakulma
-    arrowHead.setPoint(2, sf::Vector2f(0, 6));   // Vasen alakulma
-    arrowHead.setFillColor(sf::Color::White);
-
-    // 🔥 Sijoitetaan nuolenpää oikeaan kohtaan ja käännetään tuulen suuntaan
-    arrowHead.setPosition(endX, endY);
-    arrowHead.setRotation((windForce >= 0) ? 0 : 180);  // 🔥 Oikea suunta
-
-    window.draw(arrowHead);
 }
