@@ -26,8 +26,9 @@ void Projectile::update(float deltaTime, Terrain &terrain, float windForce) {
         terrain.destroy(shape.getPosition(), 50);
     }
 
-    // 🔥 Tuhoutuminen, jos ammus menee ruudun ulkopuolelle
-    if (shape.getPosition().y > 1080) {
-        alive = false;
-    }
+// 🔥 Tuhoutuminen, jos ammus menee ruudun ulkopuolelle
+// || shape.getPosition().y < -1500   ei tarvita
+if (shape.getPosition().y > 1080  || shape.getPosition().x > 2200 || shape.getPosition().x < -280) {
+    alive = false;
+}
 }

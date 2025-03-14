@@ -164,4 +164,3 @@ void Terrain::destroy(sf::Vector2f position, int baseRadius) {
     texture.update(terrainImage);
 }
 
-

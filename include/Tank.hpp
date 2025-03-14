@@ -20,6 +20,8 @@ public:
     void update(Terrain &terrain, float gravity); //UUSI******
     void move(float dx, Terrain &terrain);
     sf::Vector2f getPosition() const; // Lisätään, jotta voidaan tarkistaa sijainti
+    void handleInput(sf::Keyboard::Key key, Terrain &terrain, std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, sf::Clock &turnClock);
+
     
 
 

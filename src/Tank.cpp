@@ -161,3 +161,23 @@ Projectile Tank::shoot() {
     p.alive = true;
     return p;
 }
+
+void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain, std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, sf::Clock &turnClock) {
+    if (key == sf::Keyboard::Left)
+        rotateTurret(-5.0f);  // 🔥 Kääntää tykkiä vasemmalle
+    else if (key == sf::Keyboard::Right)
+        rotateTurret(5.0f);   // 🔥 Kääntää tykkiä oikealle
+    else if (key == sf::Keyboard::Up)
+        adjustPower(5.0f);   // 🔥 Lisää ammuksen lähtövoimaa
+    else if (key == sf::Keyboard::Down)
+        adjustPower(-5.0f);  // 🔥 Vähentää ammuksen lähtövoimaa
+    else if (key == sf::Keyboard::A)
+        move(-5.0f, terrain);  // 🔥 Siirtää tankkia vasemmalle, huomioiden maaston
+    else if (key == sf::Keyboard::D)
+        move(5.0f, terrain);   // 🔥 Siirtää tankkia oikealle, huomioiden maaston
+    else if (key == sf::Keyboard::Space) { // 🔥 Ammus laukaistaan
+        projectiles.push_back(shoot());  // 🔥 Luodaan uusi ammus ja lisätään se listaan
+        turnClock.restart();  // 🔥 Käynnistetään ajastin vuoronvaihtoa varten
+        waitingForTurnSwitch = true;  // 🔥 Estetään uuden ampumisen suorittaminen ennen vuoron vaihtumista
+    }
+}
