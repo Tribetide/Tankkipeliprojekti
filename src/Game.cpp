@@ -26,7 +26,7 @@ Game::Game()
     tank2.placeOnTerrain(terrain, 1800);
    
 
-    if (!moonTexture.loadFromFile("../assets/moon.png")) {
+    if (!moonTexture.loadFromFile("../assets/images/moon.png")) {
         std::cerr << "Kuun tekstuurin lataus epäonnistui!" << std::endl;
     }
     moonSprite.setTexture(moonTexture);

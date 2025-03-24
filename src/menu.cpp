@@ -6,7 +6,6 @@ namespace Menu {
         sf::Font font;
         if (!font.loadFromFile("../assets/fonts/arial.ttf")) {
             std::cerr << "Fontin lataus epäonnistui!\n";
-            return 2; // Suljetaan peli, jos fontti ei lataudu          // aika kova ehto :D 
         }
 
         sf::Text title("Tankkipeli", font, 50);

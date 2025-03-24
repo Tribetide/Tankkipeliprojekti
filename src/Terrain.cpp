@@ -1,53 +1,133 @@
 #include "Terrain.hpp"
-#include <cmath>
+#include <cmath>       // floor, fmod
+#include <algorithm>   // shuffle
+#include <numeric>     // iota
+#include <random>
+#include <cstdlib>     // srand, rand
+#include <ctime>       // time
+#include <iostream>    // debug prints if needed
 
-Terrain::Terrain() {}
+// =============================
+// Sisäinen PerlinNoise-luokka
+// =============================
+namespace {
+    class PerlinNoise {
+    public:
+        explicit PerlinNoise(unsigned int seed = 0) {
+            // Alustetaan taulukko [0..255]
+            p.resize(256);
+            std::iota(p.begin(), p.end(), 0);
 
-#include <cstdlib>
-#include <ctime>
+            // Sekoitetaan halutulla seedillä
+            std::default_random_engine engine(seed);
+            std::shuffle(p.begin(), p.end(), engine);
 
+            // Kopioidaan perään -> p.size() == 512
+            p.insert(p.end(), p.begin(), p.end());
+        }
 
+        // Palauttaa arvon välillä ~[-1, 1]
+        double noise(double x, double y) const {
+            int xi = (int)std::floor(x) & 255;
+            int yi = (int)std::floor(y) & 255;
+
+            double xf = x - std::floor(x);
+            double yf = y - std::floor(y);
+
+            int aa = p[p[xi] + yi];
+            int ab = p[p[xi] + yi + 1];
+            int ba = p[p[xi + 1] + yi];
+            int bb = p[p[xi + 1] + yi + 1];
+
+            double u = fade(xf);
+            double v = fade(yf);
+
+            double x1 = lerp(grad(aa, xf, yf), grad(ba, xf - 1, yf), u);
+            double x2 = lerp(grad(ab, xf, yf - 1), grad(bb, xf - 1, yf - 1), u);
+            return lerp(x1, x2, v);
+        }
+
+    private:
+        double fade(double t) const {
+            // 6t^5 - 15t^4 + 10t^3
+            return t * t * t * (t * (t * 6 - 15) + 10);
+        }
+
+        double lerp(double a, double b, double t) const {
+            return a + t * (b - a);
+        }
+
+        double grad(int hash, double x, double y) const {
+            switch (hash & 3) {
+                case 0: return  x + y;
+                case 1: return -x + y;
+                case 2: return  x - y;
+                case 3: return -x - y;
+            }
+            // fallback
+            return 0.0;
+        }
+
+        std::vector<int> p;  // Permutaatio-taulukko
+    };
+}
+
+// =============================
+// Terrain-luokan toteutus
+// =============================
+Terrain::Terrain() {
+}
+
+// Alustetaan maasto Perlin noise -tekniikalla
 void Terrain::initialize() {
-    std::srand(std::time(nullptr)); // Satunnaislukugeneraattorin alustus
-    createSky(); // Luodaan kuu ja tähdet
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
+    createSky(); // Kuu & tähdet pysyvät
+
+    // Luodaan kuva aluksi tyhjänä (läpinäkyvä) koko ruudun kokoisena
     terrainImage.create(1920, 1080, sf::Color::Transparent);
 
-    int groundHeight[1920]; // Taulukko maaston korkeuksille
+    // Luodaan PerlinNoise-olio dynaamisella seedillä
+    unsigned int seed = static_cast<unsigned>(std::time(nullptr));
+    PerlinNoise perlin(seed);
 
-    float frequency1 = 0.003f + static_cast<float>(std::rand() % 3) / 1000.0f; // Pääaallonpituus
-    float frequency2 = 0.009f + static_cast<float>(std::rand() % 5) / 1000.0f; // Toissijainen aallonpituus
-    float amplitude1 = 100.0f + std::rand() % 50; // Ensimmäinen aalto
-    float amplitude2 = 50.0f + std::rand() % 30; // Toinen aalto
-    int baseHeight = 500 + std::rand() % 150; // Peruskorkeus satunnaistettuna
+    // Parametrit, joita voit säätää
+    float scale       = 0.001f;   // x-skaala (mitä isompi, sitä "tiheämpi" maaston vaihtelu), 0.001..0.1
+    int   octaves     = 3;       // montako oktaavia, mitä enemmän, sitä "sotkuisempi" maasto, 1..8
+    float persistence = 0.4f;    // amplitudin pieneneminen per oktaavi, 0..1, 1 = ei pienenemistä
+    int   baseLine    = 100;     // peruskorkeus, josta maasto lähtee, 0..1080, 0 on yläreuna, 1080 on alareuna
+    int   maxVariation= 900;     // maksimikorkeus perlin-kukkuloille, 0..1080
+    
 
-    for (int x = 0; x < terrainImage.getSize().x; x++) {
-        int randomOffset = std::rand() % 5 - 3; // Lisää pientä vaihtelua
-        groundHeight[x] = baseHeight +
-                          std::sin(x * frequency1) * amplitude1 +
-                          std::sin(x * frequency2) * amplitude2 +
-                          randomOffset;
-    }
+    // Käydään 1920 pikseliä x-suunnassa
+    for (int x = 0; x < 1920; x++) {
+        double noiseValue = 0.0;
+        double frequency  = 1.0;
+        double amplitude  = 1.0;
 
-    // **Lisätään satunnaisia kukkuloita ja kuoppia**
-    for (int i = 0; i < 5; i++) { // 5 satunnaista kukkulaa
-        int hillX = std::rand() % 1920;
-        int hillSize = 50 + std::rand() % 100;
-        int hillHeight = 20 + std::rand() % 50;
+        // Lasketaan fractal Perlin noise
+        for (int o = 0; o < octaves; o++) {
+            double nx = x * scale * frequency;
+            double ny = 0.0;  // 1D-profiili
+            double val = perlin.noise(nx, ny); // ~[-1..1]
+            noiseValue += val * amplitude;
 
-        for (int x = hillX - hillSize; x < hillX + hillSize; x++) {
-            if (x >= 0 && x < 1920) {
-                groundHeight[x] -= hillHeight * std::exp(-((x - hillX) * (x - hillX)) / (2.0 * hillSize * hillSize));
-            }
+            frequency  *= 2.0;
+            amplitude  *= persistence;
         }
-    }
 
-    // **Täytetään maasto vihreällä**
-    for (int x = 0; x < terrainImage.getSize().x; x++) {
-        for (int y = groundHeight[x]; y < terrainImage.getSize().y; y++) {
+        // Normalisoidaan noiseValue -> [0..1]
+        double normalized = (noiseValue + 1.0) / 2.0;
+
+        // Muodostetaan lopullinen y-koordinaatti
+        int groundY = baseLine + static_cast<int>(normalized * maxVariation);
+
+        // Piirretään "maa" groundY:stä alaspäin vihreällä
+        for (int y = groundY; y < 1080; y++) {
             terrainImage.setPixel(x, y, sf::Color::Green);
         }
     }
 
+    // Päivitetään tekstuuri & sprite
     texture.loadFromImage(terrainImage);
     sprite.setTexture(texture);
     sprite.setPosition(0, 0);
@@ -59,7 +139,7 @@ void Terrain::update(float deltaTime) {
     if (shootingStarTimer >= 55.0f) {
         ShootingStar star;
         star.position = sf::Vector2f(std::rand() % 1920, std::rand() % 200); // Satunnainen aloituspaikka
-        star.velocity = sf::Vector2f(-150.0f + (std::rand() % 100), 50.0f); // 🔥 Hidastettu nopeus!
+        star.velocity = sf::Vector2f(-150.0f + (std::rand() % 100), 50.0f); // Tähdenlennon nopeus
         star.lifetime = 2.0f;
 
         shootingStars.push_back(star);
@@ -67,8 +147,8 @@ void Terrain::update(float deltaTime) {
     }
 
     for (auto &star : shootingStars) {
-        star.previousPositions.push_back(star.position); // 🔥 Talletetaan vanha sijainti häntää varten
-        if (star.previousPositions.size() > 40) { // Rajataan häntä 10 osaan
+        star.previousPositions.push_back(star.position); 
+        if (star.previousPositions.size() > 40) {
             star.previousPositions.erase(star.previousPositions.begin());
         }
 
@@ -78,25 +158,22 @@ void Terrain::update(float deltaTime) {
 
     shootingStars.erase(
         std::remove_if(shootingStars.begin(), shootingStars.end(),
-                       [](const ShootingStar &s) { return s.lifetime <= 0; }),
+                       [](const ShootingStar &s){ return s.lifetime <= 0; }),
         shootingStars.end());
 }
 
-
-
 void Terrain::createSky() {
-
-    // ⭐ Luodaan satunnaisia tähtiä
+    // Luodaan satunnaisia tähtiä
     stars.clear();
     for (int i = 0; i < 50; i++) {
         float x = std::rand() % 1920;
-        float y = std::rand() % 400; // ⭐ Tähtien korkeus
+        float y = std::rand() % 400; // Tähdet korkeintaan 400 pikseliä ylhäältä
         stars.push_back(sf::Vector2f(x, y));
     }
 }
 
-void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
-
+void Terrain::draw(sf::RenderWindow &window) {
+    // Piirretään tähtitaivas
     for (const auto& star : stars) {
         sf::CircleShape starShape(2);
         starShape.setFillColor(sf::Color::White);
@@ -104,19 +181,19 @@ void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
         window.draw(starShape);
     }
 
-
-    // 🌠 Piirretään tähdenlennot ja niiden hännät
+    // Piirretään tähdenlennot
     for (const auto& star : shootingStars) {
-        float alphaStep = 1.0f / star.previousPositions.size(); // 🔥 Parempi haalistuminen
+        float alphaStep = 1.0f / star.previousPositions.size();
 
         for (size_t i = 0; i < star.previousPositions.size(); i++) {
-            sf::CircleShape tail(5 - i * 0.2f); // 🔥 Pienenevä häntä
-            int alpha = std::max(0, static_cast<int>(255 - i * alphaStep)); // 🔥 Pehmeä haalistuminen
+            sf::CircleShape tail(5 - i * 0.2f); 
+            int alpha = std::max(0, static_cast<int>(255 - i * alphaStep));
             tail.setFillColor(sf::Color(255, 255, 255, alpha));
             tail.setPosition(star.previousPositions[i]);
             window.draw(tail);
         }
 
+        // Piirretään itse "tähdenlento"
         sf::RectangleShape shootingStar(sf::Vector2f(10, 2));
         shootingStar.setFillColor(sf::Color::White);
         shootingStar.setPosition(star.position);
@@ -124,43 +201,43 @@ void Terrain::draw(sf::RenderWindow &window) { // 🔥 Piirtää maaston
         window.draw(shootingStar);
     }
 
-    
-    window.draw(sprite);  // 🔥 Piirretään sprite
-} 
+    // Piirretään varsinainen maastosprite
+    window.draw(sprite);
+}
 
 bool Terrain::checkCollision(sf::Vector2f position) {
     int x = static_cast<int>(position.x);
-    int y = static_cast<int>(position.y); // 🔥 Korjaa, jos maaston korkeus muuttui
+    int y = static_cast<int>(position.y);
 
-    // 🔥 Varmistetaan, että koordinaatit ovat maaston rajojen sisällä
-    if (x >= 0 && x < terrainImage.getSize().x && y >= 0 && y < terrainImage.getSize().y) {
-        return terrainImage.getPixel(x, y).a != 0;  // Jos pikseli ei ole läpinäkyvä, se on maastoa
+    if (x >= 0 && x < terrainImage.getSize().x &&
+        y >= 0 && y < terrainImage.getSize().y) {
+        // Palauttaa true, jos pikseli ei ole läpinäkyvä
+        return (terrainImage.getPixel(x, y).a != 0);
     }
     return false;
 }
-
 
 void Terrain::destroy(sf::Vector2f position, int baseRadius) {
     int x0 = static_cast<int>(position.x);
     int y0 = static_cast<int>(position.y);
 
-    // 🔥 Tuhoutuminen riippuu siitä, kuinka syvällä ammus osuu
-    int radius = baseRadius + (y0 / 20); // Mitä alempana, sitä isompi räjähdys
+    // Räjähdyksen säde kasvaa alempana isommaksi
+    int radius = baseRadius + (y0 / 20);
 
     for (int i = -radius; i <= radius; ++i) {
         for (int j = -radius; j <= radius; ++j) {
             if (std::sqrt(i * i + j * j) <= radius) {
                 int x = x0 + i;
                 int y = y0 + j;
-
-                if (x >= 0 && x < terrainImage.getSize().x && y >= 0 && y < terrainImage.getSize().y) {
+                if (x >= 0 && x < terrainImage.getSize().x &&
+                    y >= 0 && y < terrainImage.getSize().y) {
+                    // Tyhjennetään pikseli (läpinäkyvä)
                     terrainImage.setPixel(x, y, sf::Color::Transparent);
                 }
             }
         }
     }
 
-    // 🔥 Muista päivittää tekstuuri!
+    // Muista päivittää tekstuuri
     texture.update(terrainImage);
 }
-

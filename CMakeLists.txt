@@ -16,6 +16,10 @@ file(COPY assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/assets)
 # Kopioi fontit myös Debug-kansioon
 file(COPY assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
 
+# 🔹 Kopioi kuvat build- ja Debug-kansioihin
+file(COPY assets/images DESTINATION ${CMAKE_BINARY_DIR}/assets)
+file(COPY assets/images DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
+
 # 🔹 Luodaan suoritettava ohjelma
 add_executable(Tankkipeli ${SOURCES})
 
