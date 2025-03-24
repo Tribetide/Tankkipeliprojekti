@@ -14,7 +14,7 @@ public:
     
     void handleShot(Projectile &projectile, Terrain &terrain);
     void update(const std::vector<Projectile>& projectiles);
-    void switchTurn();
+    void switchTurn(float &windForce);
     int getCurrentTurn() const;
     float getTimeLeft() const;
     void stopTurnTimer();

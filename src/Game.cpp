@@ -48,9 +48,9 @@ Game::Game()
         }
     }
 
-    // 🔥 Alustetaan satunnainen tuuli (-0.002f ja 0.002f välillä)
+    // 🔥 Alustetaan satunnainen tuuli (-0.0005f....0.0005f välillä)
     std::srand(std::time(nullptr));
-    windForce = (std::rand() % 200 - 100) / 50000.0f;
+    windForce = (std::rand() % 200 - 100) / 100000.0f;
 }
 
 
@@ -83,7 +83,7 @@ void Game::processEvents() {
 void Game::update() {
     if (waitingForTurnSwitch) {
         if (turnClock.getElapsedTime().asSeconds() >= 2.0f && !eventManager.anyProjectilesAlive(projectiles)) {
-            eventManager.switchTurn();
+            eventManager.switchTurn(windForce);
             waitingForTurnSwitch = false;
             eventManager.restartTurnTimer();
         }

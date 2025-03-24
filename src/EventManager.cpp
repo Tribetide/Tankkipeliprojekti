@@ -44,14 +44,16 @@ EventManager::EventManager(Tank &t1, Tank &t2)
 void EventManager::update(const std::vector<Projectile>& projectiles) {
     if (waitingForTurnSwitch) {
         if (turnSwitchClock.getElapsedTime().asSeconds() >= 2.0f) {  
-            switchTurn();
+            float windForce = 0.0f;  // Initialize windForce
+            switchTurn(windForce);
             waitingForTurnSwitch = false;
         }
     } 
     // 🔥 Ajastin on mennyt nollaan, mutta tarkistetaan, onko ammus elossa
     else if (!turnTimerPaused && turnClock.getElapsedTime().asSeconds() > TURN_TIME_LIMIT) {
         if (!anyProjectilesAlive(projectiles)) {  
-            switchTurn();
+            float windForce = 0.0f;  // Initialize windForce
+            switchTurn(windForce);
         } 
         // 🔥 Jos ammus on yhä ilmassa, ei tehdä mitään – odotetaan sen putoamista
     }
@@ -59,9 +61,10 @@ void EventManager::update(const std::vector<Projectile>& projectiles) {
 
 
 
-void EventManager::switchTurn() {
+void EventManager::switchTurn(float &windForce) {
     currentTank = (currentTank == 0) ? 1 : 0;
     turnClock.restart();
+    windForce = (std::rand() % 100 - 50) / 100000.0f;  // 🔥 Arvotaan uusi tuuli
 }
 
 int EventManager::getCurrentTurn() const {
