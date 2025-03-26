@@ -3,6 +3,7 @@
 #include <cstdlib>   // 🔥 Satunnaislukujen generointiin
 #include <ctime>     // 🔥 Aikasiemen satunnaislukujen alustamiseen
 #include <cmath>
+#include "Game.hpp"
 
 float EventManager::getTimeLeft() const {
     // 🔥 Jos ajastin on pysäytetty, näytetään jäljellä oleva aika tallennetusta arvosta
@@ -10,12 +11,23 @@ float EventManager::getTimeLeft() const {
     return std::max(0, static_cast<int>(std::floor(timeLeft)));
 }
 
-EventManager::EventManager(Tank &t1, Tank &t2) 
-    : tank1(t1), tank2(t2) {
+EventManager::EventManager(Tank &t1, Tank &t2, Game &g) 
+    : tank1(t1), tank2(t2), game(g) {
     std::srand(static_cast<unsigned>(std::time(nullptr)));  // 🔥 Alustetaan satunnaislukugeneraattori
     currentTank = std::rand() % 2;  // 🔥 Arvotaan 0 (tank1) tai 1 (tank2)
     turnClock.restart(); // 🔥 Aloitetaan vuoroajastin
 }
+
+    void EventManager::reset(Tank &t1, Tank &t2, Game & /*game*/) {
+        tank1 = t1;
+        tank2 = t2;
+        currentTank = 0;
+        turnClock.restart();
+        turnTimerPaused = false;
+        pausedTime = 0.0f;
+        waitingForTurnSwitch = false;
+    }
+
 
     void EventManager::handleShot(Projectile &projectile, Terrain &terrain) {
         if (!projectile.alive) return;  // 🔥 Jos ammus on jo "kuollut", älä käsittele uudelleen
@@ -45,7 +57,7 @@ void EventManager::update(const std::vector<Projectile>& projectiles) {
     if (waitingForTurnSwitch) {
         if (turnSwitchClock.getElapsedTime().asSeconds() >= 2.0f) {  
             float windForce = 0.0f;  // Initialize windForce
-            switchTurn(windForce);
+            switchTurn(windForce, game);
             waitingForTurnSwitch = false;
         }
     } 
@@ -53,7 +65,7 @@ void EventManager::update(const std::vector<Projectile>& projectiles) {
     else if (!turnTimerPaused && turnClock.getElapsedTime().asSeconds() > TURN_TIME_LIMIT) {
         if (!anyProjectilesAlive(projectiles)) {  
             float windForce = 0.0f;  // Initialize windForce
-            switchTurn(windForce);
+            switchTurn(windForce, game);
         } 
         // 🔥 Jos ammus on yhä ilmassa, ei tehdä mitään – odotetaan sen putoamista
     }
@@ -61,11 +73,19 @@ void EventManager::update(const std::vector<Projectile>& projectiles) {
 
 
 
-void EventManager::switchTurn(float &windForce) {
+void EventManager::switchTurn(float &windForce, Game &game) {
+    // 🔥 Tarkistetaan ennen vuoron vaihtoa, onko peli päättynyt
+    if (tank1.getHp() == 0 || tank2.getHp() == 0) {
+        game.endGame();  // 🔥 Jos joku tankki on kuollut, lopetetaan peli
+        return;
+    }
+
+    // Jos peli ei ole vielä päättynyt, vaihdetaan vuoro
     currentTank = (currentTank == 0) ? 1 : 0;
     turnClock.restart();
     windForce = (std::rand() % 100 - 50) / 100000.0f;  // 🔥 Arvotaan uusi tuuli
 }
+
 
 int EventManager::getCurrentTurn() const {
     return currentTank;

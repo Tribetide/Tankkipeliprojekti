@@ -3,7 +3,7 @@
 
 #include <SFML/Graphics.hpp>
 #include "Projectile.hpp"
-
+#include "Terrain.hpp"  // Jos tarvitset Terrain-luokkaa
 
 
 
@@ -22,8 +22,12 @@ public:
     sf::Vector2f getPosition() const; // Lisätään, jotta voidaan tarkistaa sijainti
     void handleInput(sf::Keyboard::Key key, Terrain &terrain, std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, sf::Clock &turnClock);
 
-    
+    // Lisää getterit ja setterit hp:lle
+    int getHp() const;  // Määrittely ilman toteutusta
+    void setHp(int newHp);  // Määrittely ilman toteutusta
 
+    // Reset-metodi päivitetty hyväksymään aloituspaikan
+    void reset(Terrain& terrain, const sf::Vector2f& startPosition);
 
 private:
     sf::CircleShape upperBody;  
@@ -31,6 +35,9 @@ private:
     sf::RectangleShape turret;
     float angle;
     float power;
+    int hp; // Lisätty hp (elämäpisteet)
+
+    sf::Vector2f initialPosition; // Tallentaa alkuperäisen sijainnin
     
 };
 

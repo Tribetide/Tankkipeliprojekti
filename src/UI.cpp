@@ -70,3 +70,11 @@ void UI::drawWindIndicator(sf::RenderWindow &window, float windForce) {
 
     window.draw(arrowHead);
 }
+
+// Piirretään tankin hp
+void UI::drawTankHp(sf::RenderWindow &window, sf::Font &font, const Tank &tank) {
+    sf::Text hpText(std::to_string(tank.getHp()), font, 20);
+    hpText.setPosition(tank.getPosition().x - 20, tank.getPosition().y - 50);
+    hpText.setFillColor(sf::Color::White); // Väriksi valkoinen
+    window.draw(hpText);
+}

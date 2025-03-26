@@ -6,6 +6,7 @@ namespace Menu {
         sf::Font font;
         if (!font.loadFromFile("../assets/fonts/arial.ttf")) {
             std::cerr << "Fontin lataus epäonnistui!\n";
+            return 2; // Palautetaan Quit, jos fontin lataus epäonnistuu
         }
 
         sf::Text title("Tankkipeli", font, 50);
@@ -34,21 +35,19 @@ namespace Menu {
 
                 if (event.type == sf::Event::MouseButtonPressed) {
                     if (event.mouseButton.button == sf::Mouse::Left) {
-                        // Tarkistetaan, onko hiiri klikannut Start tai Quit
                         if (startBounds.contains(window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y)))) {
-                            return 1; // Start valittu
+                            return 1; // Aloita peli
                         } else if (quitBounds.contains(window.mapPixelToCoords(sf::Vector2i(event.mouseButton.x, event.mouseButton.y)))) {
-                            return 2; // Quit valittu
+                            return 2; // Lopeta
                         }
                     }
                 }
-            
 
                 if (event.type == sf::Event::KeyPressed) {
                     if (event.key.code == sf::Keyboard::Num1) {
-                        return 1; // Start valittu näppäimellä 1
+                        return 1; // Aloita peli
                     } else if (event.key.code == sf::Keyboard::Num2) {
-                        return 2; // Quit valittu näppäimellä 2
+                        return 2; // Lopeta
                     }
                 }
             }
@@ -63,4 +62,3 @@ namespace Menu {
         return 2; // Jos ikkuna suljetaan
     }
 }
-
