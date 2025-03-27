@@ -30,7 +30,10 @@ public:
     void reset(Terrain& terrain, const sf::Vector2f& startPosition);
 
 private:
-    sf::CircleShape upperBody;  
+
+    sf::Texture lowerBodyTexture, upperBodyTexture, turretTexture;
+    sf::Sprite lowerBodySprite, upperBodySprite, turretSprite;
+    sf::RectangleShape upperBody;  
     sf::RectangleShape lowerBody;
     sf::RectangleShape turret;
     float angle;
