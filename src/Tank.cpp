@@ -3,7 +3,7 @@
 #include <cmath>  // Tämä tarvitaan trigonometristen funktioiden käyttöön
 #include <iostream>
 
-Tank::Tank() : angle(45.0f), power(50.0f), hp(100) {
+Tank::Tank() : angle(45.0f), power(50.0f), hp(100), fuel(20) {
     // Määritetään alkuperäinen sijainti (esimerkiksi X = 350, Y = 260)
     initialPosition = sf::Vector2f(350, 260);
 
@@ -62,6 +62,8 @@ void Tank::draw(sf::RenderWindow &window) {
 
 
 void Tank::move(float dx, Terrain &terrain) {
+    if (fuel <= 0) return;  // Ei voi liikkua, jos polttoaine loppu
+
     sf::Vector2f oldPosition = upperBody.getPosition();
     sf::Vector2f newPosition = oldPosition;
     newPosition.x += dx;  // Uusi X-koordinaatti
@@ -103,6 +105,8 @@ void Tank::move(float dx, Terrain &terrain) {
         upperBody.getPosition().x + 25 * turret.getScale().x, 
         upperBody.getPosition().y
     );
+
+    fuel--;  // Vähennetään polttoainetta jokaisella liikkeellä
 }
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -251,6 +255,13 @@ void Tank::setHp(int newHp) {
     hp = newHp;
 }
 
+int Tank::getFuel() const {
+    return fuel;
+}
+
+void Tank::resetFuel() {
+    fuel = 20;  // Uusi vuoro, polttoaine täyteen
+}
 
 void Tank::reset(Terrain &terrain, const sf::Vector2f& startPosition) {
     // Palautetaan tankki annettuun sijaintiin ja asetetaan kaikki parametrit nollaksi
@@ -258,4 +269,5 @@ void Tank::reset(Terrain &terrain, const sf::Vector2f& startPosition) {
     power = 50.0f;  // Nollataan voima
     angle = 45.0f;  // Nollataan kulma
     hp = 100;  // Nollataan elämä
+    fuel = 20; // Nollataan polttoaine
 }
