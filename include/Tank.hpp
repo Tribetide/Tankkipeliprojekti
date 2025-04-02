@@ -22,12 +22,16 @@ public:
     sf::Vector2f getPosition() const; // Lisätään, jotta voidaan tarkistaa sijainti
     void handleInput(sf::Keyboard::Key key, Terrain &terrain, std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, sf::Clock &turnClock);
 
-    // Lisää getterit ja setterit hp:lle
+    // Lisää getterit ja setterit hp:lle ja polttoaineelle
     int getHp() const;  // Määrittely ilman toteutusta
     void setHp(int newHp);  // Määrittely ilman toteutusta
+    int getFuel() const;
 
     // Reset-metodi päivitetty hyväksymään aloituspaikan
     void reset(Terrain& terrain, const sf::Vector2f& startPosition);
+
+    // Reset-metodi polttoaineelle
+    void resetFuel();
 
 private:
 
@@ -39,6 +43,8 @@ private:
     float angle;
     float power;
     int hp; // Lisätty hp (elämäpisteet)
+    int fuel;  // Jäljellä oleva liikkumisyksiköiden määrä per vuoro
+    
 
     sf::Vector2f initialPosition; // Tallentaa alkuperäisen sijainnin
     

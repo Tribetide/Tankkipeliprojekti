@@ -84,6 +84,13 @@ void EventManager::switchTurn(float &windForce, Game &game) {
     currentTank = (currentTank == 0) ? 1 : 0;
     turnClock.restart();
     windForce = (std::rand() % 100 - 50) / 100000.0f;  // 🔥 Arvotaan uusi tuuli
+
+    //  Resetoi polttoaine uuden vuoron alkaessa
+    if (currentTank == 0) {
+        tank1.resetFuel();
+    } else {
+        tank2.resetFuel();
+    }
 }
 
 
