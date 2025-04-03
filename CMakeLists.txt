@@ -20,12 +20,17 @@ file(COPY assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
 file(COPY assets/images DESTINATION ${CMAKE_BINARY_DIR}/assets)
 file(COPY assets/images DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
 
+# Kopioi äänet build- ja Debug-kansioihin
+file(COPY assets/sounds DESTINATION ${CMAKE_BINARY_DIR}/assets)
+file(COPY assets/sounds DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
+
 # 🔹 Luodaan suoritettava ohjelma
 add_executable(Tankkipeli ${SOURCES})
 
 # 🔹 Linkitetään SFML automaattisesti
-find_package(SFML 2.6 REQUIRED COMPONENTS graphics window system)
-target_link_libraries(Tankkipeli PRIVATE sfml-graphics sfml-window sfml-system)
+find_package(SFML 2.6 REQUIRED COMPONENTS graphics window system audio)
+target_link_libraries(Tankkipeli PRIVATE sfml-graphics sfml-window sfml-system sfml-audio)
+
 
 
 
