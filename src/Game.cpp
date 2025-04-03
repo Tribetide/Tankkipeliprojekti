@@ -8,6 +8,8 @@
 #include <cmath>  // Matematiikkakirjasto
 #include "menu.hpp"
 #include <memory>
+#include <SoundManager.hpp>
+#include "Tank.hpp"
 
 
 void printCurrentWorkingDirectory() {
@@ -63,6 +65,7 @@ void Game::run() {
     while (window.isOpen()) {
         processEvents();
         update();
+        SoundManager::getInstance().update();
         render();
     }
 }
@@ -94,25 +97,30 @@ void Game::update() {
         }
     }
 
+    
+
     // 🔥 Päivitä eventManager ja anna sille projektiililista
     eventManager.update(projectiles);
 
 
+    // 🔥 Määritä aktiivinen tankki sekä vastustajan
+    Tank &activeTank   = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+    Tank &opponentTank = (eventManager.getCurrentTurn() == 0) ? tank2 : tank1;
+
     // 🔥 Päivitä aktiivinen tankki
-    Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
     activeTank.update(terrain, gravity); 
 
     // 🔥 Päivitä kaikki ammukset
-    float deltaTime = 0.9f / 60.0f; // Oletetaan 60 FPS, voit laskea oikean ajan tarvittaessa
-
+    float deltaTime = 0.9f / 60.0f; 
     terrain.update(deltaTime); // 🔥 Päivitetään tähdenlennot
 
-    for (auto &p : projectiles) {
- //       std::cout << "Ammus y: " << p.shape.getPosition().y                   // Oli vain debuaggausta varten :D 
- //       << " | Ammus x: " << p.shape.getPosition().x << std::endl;
-        p.update(gravity, terrain, windForce);
-        if (p.alive) {
-            eventManager.handleShot(p, terrain);
+    for (auto &proj : projectiles) {
+        proj.update(deltaTime, terrain);
+
+        // Ammus ei osu omaan tankkiin, vain vastustajaan
+        if (proj.alive && proj.getBounds().intersects(opponentTank.getBounds())) {
+            opponentTank.takeDamage(30);
+            proj.alive = false;
         }
     }
 
