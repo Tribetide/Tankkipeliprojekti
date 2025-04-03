@@ -223,7 +223,7 @@ Projectile Tank::shoot() {
     
 }
 
-void Tank::placeOnTerrain(Terrain &terrain, int startX) {
+/*void Tank::placeOnTerrain(Terrain &terrain, int startX) {
     // Etsitään maan korkein kohta annetusta x-koordinaatista
     int yFound = 0;
     for (int i = 0; i < 1080; i++) {
@@ -241,7 +241,7 @@ void Tank::placeOnTerrain(Terrain &terrain, int startX) {
     lowerBody.setPosition(startX - 15, yFound + 30);
     turret.setPosition(startX + 25, yFound);
 }
-
+*/
 void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain, 
                         std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, 
                         sf::Clock &turnClock) {
@@ -297,10 +297,6 @@ float Tank::getPower() const {
     return power;
 }
 
-sf::Vector2f Tank::getPosition() const {
-    // Valitaan yläosan sijainti tankin sijainniksi
-    return upperBody.getPosition();
-}
 
 // Palauttaa yhdistetyn bounding boxin yläosasta, alaosasta ja tykistä
 sf::FloatRect Tank::getBounds() const {

@@ -52,7 +52,7 @@ private:
     // 🔥 Muodot
     sf::Texture lowerBodyTexture, upperBodyTexture, turretTexture;
     sf::Sprite lowerBodySprite, upperBodySprite, turretSprite;
-    sf::CircleShape upperBody;  
+    sf::RectangleShape upperBody;  
     sf::RectangleShape lowerBody;
     sf::RectangleShape turret;
 
