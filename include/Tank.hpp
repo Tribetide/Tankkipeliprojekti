@@ -32,6 +32,7 @@ public:
     void heal(int amount);
     int getHp() const;
     bool isDestroyed() const { return destroyed; }
+    int getFuel() const;
 
 
     // 🔥 Getterit
@@ -44,10 +45,13 @@ public:
 
     // 🔥 Reset (aloitustilanteeseen)
     void reset(Terrain& terrain, const sf::Vector2f& startPosition);
+    void resetFuel();
 
 
 private:   
     // 🔥 Muodot
+    sf::Texture lowerBodyTexture, upperBodyTexture, turretTexture;
+    sf::Sprite lowerBodySprite, upperBodySprite, turretSprite;
     sf::CircleShape upperBody;  
     sf::RectangleShape lowerBody;
     sf::RectangleShape turret;
@@ -57,6 +61,7 @@ private:
     bool destroyed;
     float angle;
     float power;
+    int fuel;
 
     // 🔥 Sijainti
     sf::Vector2f initialPosition; // Tallentaa alkuperäisen sijainnin

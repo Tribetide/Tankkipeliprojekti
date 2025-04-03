@@ -157,8 +157,9 @@ void Game::render() {
     UI::drawWindText(window, font, windForce);
     UI::drawWindIndicator(window, windForce);
 
-    // Piirretään vuorossa olevan tankin hp
+    // Piirretään vuorossa olevan tankin hp ja polttoaine
     UI::drawTankHp(window, font, currentTank);  // Piirrä hp vain kerran
+    UI::drawFuelMeter(window, font, currentTank);
 
     window.display();
 }

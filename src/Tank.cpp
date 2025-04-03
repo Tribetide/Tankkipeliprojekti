@@ -5,51 +5,69 @@
 #include <SFML/Audio.hpp> // sf::Sound
 #include <iostream>  // Debug-tulostukset
 
+#include <iostream>
 
-Tank::Tank() : angle(45.0f), power(50.0f), hp(100), destroyed(false) {
-    initialPosition = sf::Vector2f(350, 260);  
+Tank::Tank() : angle(45.0f), power(50.0f), hp(100), fuel(20) {
+    // Määritetään alkuperäinen sijainti (esimerkiksi X = 350, Y = 260)
+    initialPosition = sf::Vector2f(350, 260);
 
-    // Yläosa: puoliympyrä
-    upperBody.setRadius(20);
-    upperBody.setPointCount(20);
-    upperBody.setFillColor(sf::Color(128, 0, 128));
-    upperBody.setPosition(initialPosition); 
+    // Ladataan tekstuurit
+    if (!lowerBodyTexture.loadFromFile("../assets/images/lowerBody.png")) {
+        std::cerr << "Error: Could not load lowerBody.png\n";
+    }
+    if (!upperBodyTexture.loadFromFile("../assets/images/upperBody.png")) {
+        std::cerr << "Error: Could not load upperBody.png\n";
+    }
+    if (!turretTexture.loadFromFile("../assets/images/turret.png")) {
+        std::cerr << "Error: Could not load turret.png\n";
+    }
 
-    // Alaosa: telojen suorakaide
+    // Yläosa: suorakaide ja tekstuuri
+    upperBody.setSize(sf::Vector2f(60, 15));
+    upperBody.setTexture(&upperBodyTexture); // Lisätään tekstuuri
+ //   upperBody.setScale(2.0f, 2.0f);         // Skaalataan 2x
+    upperBody.setPosition(initialPosition);
+
+    // Alaosa: Suorakaide ja tekstuuri
     lowerBody.setSize(sf::Vector2f(60, 15));
-    lowerBody.setFillColor(sf::Color(128, 0, 128));
-    lowerBody.setPosition(upperBody.getPosition().x - 15, upperBody.getPosition().y + 30);
+    lowerBody.setTexture(&lowerBodyTexture);
+//    lowerBody.setScale(1.2f, 1.2f); // Skaalaus
 
-    // Tykki
+    // Sijoitus yläosan sijainnin perusteella
+    lowerBody.setPosition(
+        upperBody.getPosition().x + 25, 
+        upperBody.getPosition().y + (-120000000000000 * upperBody.getScale().y) // :D Hetki piti ettiä, että mihinä vika, vaikka kuinka muutti tätä niin mikään ei muuttunut :D
+    );
+
+    // Tykki: Suorakaide ja tekstuuri
     turret.setSize(sf::Vector2f(35, 8));
-    turret.setFillColor(sf::Color::Blue);
-    turret.setOrigin(0, 4);
+    turret.setTexture(&turretTexture); // Lisätään tekstuuri
+    turret.setOrigin(0, 4); // Asetetaan kiertopiste tykin keskipisteeseen
+    turret.setScale(1.2f, 1.2f);         // Skaalataan 2x
     turret.setPosition(upperBody.getPosition().x + 25, upperBody.getPosition().y);
-    turret.setRotation(angle);
+    turret.setRotation(angle); // Asetetaan kulma
+
+
+
 }
 
 void Tank::draw(sf::RenderWindow &window) {
-    window.draw(lowerBody);  
-    window.draw(upperBody);  
-    window.draw(turret);     
+    window.draw(lowerBody);  // Piirrä telat ensin
+    window.draw(upperBody);  // Piirrä tankin yläosa
+    window.draw(turret);     // Piirrä tykki lopuksi
 }
 
 
-void Tank::update(Terrain &terrain, float gravity) {
-    // Pudotetaan tankkia, jos se ei ole maassa
-    sf::Vector2f position = upperBody.getPosition();
-    
 
-    // Tarkistetaan, onko tankin alla vielä maata
-    if (!terrain.checkCollision(sf::Vector2f(position.x + 30, position.y + 45))) {
-        float moveAmount = gravity * 550.0f; 
-        upperBody.move(0, moveAmount);
-        lowerBody.move(0, moveAmount);
-        turret.move(0, moveAmount);
-    }
-}
+
+//////  TÄÄLTÄ SÄÄDETÄÄN TANKIN OSIEN SIJAINTIA KUN LIIKUTAAN
+
+
+
 
 void Tank::move(float dx, Terrain &terrain) {
+    if (fuel <= 0) return;  // Ei voi liikkua, jos polttoaine loppu
+
     sf::Vector2f oldPosition = upperBody.getPosition();
     sf::Vector2f newPosition = oldPosition;
     newPosition.x += dx; 
@@ -82,8 +100,35 @@ void Tank::move(float dx, Terrain &terrain) {
     // Jos mäki on riittävän loiva, siirretään tankki
     float adjustedY = newHeight - 40;
     upperBody.setPosition(newPosition.x, adjustedY);
-    lowerBody.setPosition(newPosition.x - 15, adjustedY + 30);
-    turret.setPosition(newPosition.x + 25, adjustedY);
+    lowerBody.setPosition(
+        upperBody.getPosition().x, 
+        upperBody.getPosition().y + upperBody.getSize().y * upperBody.getScale().y
+    );
+    turret.setPosition(
+        upperBody.getPosition().x + 25 * turret.getScale().x, 
+        upperBody.getPosition().y
+    );
+
+    fuel--;  // Vähennetään polttoainetta jokaisella liikkeellä
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+
+
+void Tank::update(Terrain &terrain, float gravity) {
+    sf::Vector2f position = upperBody.getPosition();
+    float moveAmount = gravity * 550.0f;  // Testataan suuremmalla arvolla
+
+    // Tarkistetaan, onko tankin alla vielä maata
+    if (!terrain.checkCollision(sf::Vector2f(position.x + 30, position.y + 45))) {
+        upperBody.move(0, moveAmount);
+        lowerBody.move(0, moveAmount);
+        turret.move(0, moveAmount);
+    }
+}
+
+sf::Vector2f Tank::getPosition() const {
+    return upperBody.getPosition();
 }
 
 void Tank::rotateTurret(float angleDelta) {
@@ -96,6 +141,50 @@ void Tank::rotateTurret(float angleDelta) {
     // Päivitetään tykin sijainti suhteessa tankin runkoon
     turret.setPosition(upperBody.getPosition().x + 25, upperBody.getPosition().y);
 }
+
+
+
+
+////////////  TÄÄLTÄ SÄÄDETÄÄN TANKIN OSIEN SIJAINTIA KUN ASETETAAN TANKKI
+
+void Tank::placeOnTerrain(Terrain &terrain, int startX) {
+    int terrainHeight = 0;
+
+    // Selvitetään korkein piste maastossa, jossa tankki voidaan sijoittaa
+    for (int i = 0; i < 1080; i++) {
+        if (terrain.checkCollision(sf::Vector2f(startX, i))) {
+            terrainHeight = i; // Asetetaan alaosan korkeus suoraan maastoon
+            break;
+        }
+    }
+
+    // Varmistetaan, ettei korkeus ole negatiivinen
+    terrainHeight = std::max(terrainHeight, 0);
+
+    // Asetetaan alaosa maaston korkeudelle
+    lowerBody.setPosition(startX, terrainHeight);
+
+    // Yläosan sijainti suhteessa alaosaan
+    upperBody.setPosition(
+        lowerBody.getPosition().x, 
+        lowerBody.getPosition().y - upperBody.getSize().y * upperBody.getScale().y
+    );
+
+    // Tykin sijainti suhteessa yläosaan
+    turret.setPosition(
+        upperBody.getPosition().x + 25 * turret.getScale().x, 
+        upperBody.getPosition().y
+    );
+
+    // Debug: Tulosta tankin osien sijainnit
+    std::cout << "Tank placed at X: " << startX << ", Terrain Height: " << terrainHeight << "\n";
+    std::cout << "LowerBody Position: " << lowerBody.getPosition().x << ", " << lowerBody.getPosition().y << "\n";
+    std::cout << "UpperBody Position: " << upperBody.getPosition().x << ", " << upperBody.getPosition().y << "\n";
+    std::cout << "Turret Position: " << turret.getPosition().x << ", " << turret.getPosition().y << "\n";
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 void Tank::adjustPower(float powerDelta) {
     power += powerDelta;
@@ -232,8 +321,14 @@ sf::FloatRect Tank::getBounds() const {
     return sf::FloatRect(left, top, right - left, bottom - top);
 }
 
+int Tank::getFuel() const {
+    return fuel;
+}
 
-//-- Resetointi
+void Tank::resetFuel() {
+    fuel = 20;  // Uusi vuoro, polttoaine täyteen
+}
+
 void Tank::reset(Terrain &terrain, const sf::Vector2f& startPosition) {
     // Palautetaan tankki annettuun sijaintiin ja asetetaan kaikki parametrit nollaksi
     placeOnTerrain(terrain, startPosition.x); // Käytetään annettua paikkaa
@@ -241,6 +336,5 @@ void Tank::reset(Terrain &terrain, const sf::Vector2f& startPosition) {
     angle = 45.0f;
     hp = 100;  
     destroyed = false; 
+    fuel = 20; // Nollataan polttoaine
 }
-
-

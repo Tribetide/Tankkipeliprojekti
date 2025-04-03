@@ -15,6 +15,8 @@ public:
     static void drawWindText(sf::RenderWindow &window, sf::Font &font, float windForce);
     static void drawWindIndicator(sf::RenderWindow &window, float windForce);
     static void drawTankHp(sf::RenderWindow &window, sf::Font &font, const Tank &tank);
+    static void drawFuelMeter(sf::RenderWindow &window, sf::Font &font, const Tank &tank);
+
 };
 
 #endif // UI_HPP
