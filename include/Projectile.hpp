@@ -7,16 +7,30 @@
 class Projectile {
 public:
     Projectile();
-    void update(float gravity, Terrain &terrain, float windForce);
-    void setGravity(float gravity);  // 🔥 Mahdollistaa yksittäisen painovoiman asetuksen
-
-    bool alive;
+    
+    // 🔥 Ammuksen muodot
     sf::CircleShape shape;
+
+    // 🔥 Ammuksen liike
     sf::Vector2f velocity;
+    bool alive;
+
+    // 🔥 Päivitys ja piirtäminen
+    //void update(float gravity, Terrain &terrain, float windForce);
+    void update(float deltaTime, Terrain &terrain);
+    void draw(sf::RenderWindow &window) const;
+
+    // 🔥 Törmäystarkistus
+    sf::FloatRect getBounds() const; 
+
+    // 🔥 Painovoiman asetus
+    void setGravity(float gravity);
+ 
+
+
     
 private:
-    float gravityEffect = 0.0005f;
+    float gravity;
 };
-
 
 #endif

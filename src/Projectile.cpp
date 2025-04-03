@@ -1,34 +1,54 @@
 #include "Projectile.hpp"
+#include <SoundManager.hpp>
 
-Projectile::Projectile() : alive(false) {}
 
-void Projectile::setGravity(float gravity) {
-    if (gravity >= 0.0001f && gravity <= 0.01f) {  // 🔥 Varmistetaan järkevä arvo
-        gravityEffect = gravity;
-    }
+Projectile::Projectile() : velocity(0.f, 0.f), alive(false), gravity(0.0005f) {
+    shape.setRadius(5.f);
+    shape.setFillColor(sf::Color::White);
 }
 
-void Projectile::update(float deltaTime, Terrain &terrain, float windForce) {
+void Projectile::setGravity(float g) {
+    gravity = g;
+}
+
+void Projectile::update(float deltaTime, Terrain &terrain) {
     if (!alive) return;
 
-    // 🔥 Lisätään tuulen vaikutus X-akseliin
-    velocity.x += windForce;
+    // 🔥 Perusliike
+    shape.move(velocity.x * deltaTime, velocity.y * deltaTime);
 
     // 🔥 Painovoima vaikuttaa Y-akseliin
-    velocity.y += gravityEffect;
+    velocity.y += gravity * (1000.f * deltaTime); 
 
-    // 🔥 Päivitetään ammuksen sijainti
-    shape.move(velocity);
+    // 🔥 Tuhoutuminen, jos ammus menee ruudun ulkopuolelle
+    sf::Vector2f pos = shape.getPosition();
+    if (pos.x < -50 || pos.x > 2000 || pos.y < -50 || pos.y > 1200) {
+        alive = false;
+    }
 
-    // 🔥 Törmäystarkistus
+    // 🔥 Törmäystarkistus maastoon
     if (terrain.checkCollision(shape.getPosition())) {
         alive = false;
         terrain.destroy(shape.getPosition(), 50);
-    }
 
-// 🔥 Tuhoutuminen, jos ammus menee ruudun ulkopuolelle
-// || shape.getPosition().y < -1500   ei tarvita
-if (shape.getPosition().y > 1080  || shape.getPosition().x > 2200 || shape.getPosition().x < -280) {
-    alive = false;
+        // 💥 Explosion-ääni 100 % volumella
+        SoundManager::getInstance().playSound("explosion", 100.f);
+    }
+    
 }
+
+
+// Piirtää ammuksen
+void Projectile::draw(sf::RenderWindow &window) const {
+    if (alive) {
+        window.draw(shape);
+    }
 }
+
+// Palauttaa ammuksen rajat (FloatRect), käytetään intersects() -tarkistuksessa
+sf::FloatRect Projectile::getBounds() const {
+    return shape.getGlobalBounds();
+}
+
+
+
