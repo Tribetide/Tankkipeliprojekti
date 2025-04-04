@@ -10,6 +10,7 @@
 #include <memory>
 #include <SoundManager.hpp>
 #include "Tank.hpp"
+#include "Explosion.hpp"
 
 
 void printCurrentWorkingDirectory() {
@@ -18,12 +19,13 @@ void printCurrentWorkingDirectory() {
               << std::endl;
 }
 
-Game::Game() 
+Game::Game()
     : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"),
       gravity(0.0005f),
       eventManager(tank1, tank2, *this),
       tank1StartPosition(100, 0), // Alkuperäinen sijainti tankille 1
       tank2StartPosition(1800, 0) // Alkuperäinen sijainti tankille 2
+
 {
     printCurrentWorkingDirectory(); // Tulostetaan nykyinen hakemisto
 
@@ -89,6 +91,17 @@ void Game::processEvents() {
 }
 
 void Game::update() {
+    float deltaTime = 0.9f / 60.0f;
+
+    // 🔥 Päivitä räjähdykset ensin
+    for (auto &e : explosions) {
+        e.update(deltaTime);
+    }
+    explosions.erase(
+        std::remove_if(explosions.begin(), explosions.end(),
+                        [](const Explosion &e) { return e.isFinished(); }),
+        explosions.end()
+    );
     if (waitingForTurnSwitch) {
         if (turnClock.getElapsedTime().asSeconds() >= 2.0f && !eventManager.anyProjectilesAlive(projectiles)) {
             eventManager.switchTurn(windForce, *this);  // 🔥 Lisätty `*this`
@@ -111,7 +124,7 @@ void Game::update() {
     activeTank.update(terrain, gravity); 
 
     // 🔥 Päivitä kaikki ammukset
-    float deltaTime = 0.9f / 60.0f; 
+    
     terrain.update(deltaTime); // 🔥 Päivitetään tähdenlennot
 
     for (auto &proj : projectiles) {
@@ -122,7 +135,27 @@ void Game::update() {
             opponentTank.takeDamage(30);
             proj.alive = false;
         }
+    
+        if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
+            explosions.emplace_back(proj.shape.getPosition()); // 🔥 Lisää räjähdys
+            proj.alive = false;
+            terrain.destroy(proj.shape.getPosition(), 50);
+            SoundManager::getInstance().playSound("explosion", 100.f);
+            std::cout << "Räjähdyksiä aktiivisena: " << explosions.size() << std::endl;
+
+        }
     }
+        // 🔥 Päivitä kaikki räjähdykset
+        for (auto &e : explosions) {
+            e.update(deltaTime);
+        }
+        explosions.erase(
+            std::remove_if(explosions.begin(), explosions.end(),
+                            [](const Explosion &e) { return e.isFinished(); }),
+            explosions.end()
+    );
+
+
 
     // 🔥 Poista kuolleet ammukset listasta
     projectiles.erase(
@@ -160,6 +193,11 @@ void Game::render() {
     // Piirretään vuorossa olevan tankin hp ja polttoaine
     UI::drawTankHp(window, font, currentTank);  // Piirrä hp vain kerran
     UI::drawFuelMeter(window, font, currentTank);
+    // 🔥 Piirrä kaikki räjähdysefektit
+    for (const auto& e : explosions) {
+        e.draw(window);
+    }
+
 
     window.display();
 }
@@ -170,6 +208,7 @@ void Game::endGame() {
     winnerText.setFont(font);
     winnerText.setCharacterSize(50);
     winnerText.setFillColor(sf::Color::Green);
+
 
     // Määritetään voittoteksti
     if (tank1.getHp() == 0) {

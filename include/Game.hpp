@@ -7,6 +7,7 @@
 #include "Projectile.hpp"
 #include "EventManager.hpp"  // Tämä pitää olla ennen Game-luokkaa
 #include <memory>  // Tarvitaan std::unique_ptr
+#include "Explosion.hpp"
 
 class EventManager;
 
@@ -24,12 +25,14 @@ private:
     void render();
     void drawWindIndicator();
 
+    std::vector<Explosion> explosions;
     sf::RenderWindow window;
     Tank tank1;
     Tank tank2;
     bool isPlayerOneTurn; // Vuorottelua
     sf::Texture moonTexture;
     sf::Sprite moonSprite;
+
 
     Terrain terrain;
     std::vector<Projectile> projectiles;

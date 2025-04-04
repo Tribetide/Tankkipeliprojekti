@@ -25,16 +25,6 @@ void Projectile::update(float deltaTime, Terrain &terrain) {
     if (pos.x < -50 || pos.x > 2000 || pos.y < -50 || pos.y > 1200) {
         alive = false;
     }
-
-    // 🔥 Törmäystarkistus maastoon
-    if (terrain.checkCollision(shape.getPosition())) {
-        alive = false;
-        terrain.destroy(shape.getPosition(), 50);
-
-        // 💥 Explosion-ääni 100 % volumella
-        SoundManager::getInstance().playSound("explosion", 100.f);
-    }
-    
 }
 
 
