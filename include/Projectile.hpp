@@ -17,7 +17,7 @@ public:
 
     // 🔥 Päivitys ja piirtäminen
     //void update(float gravity, Terrain &terrain, float windForce);
-    void update(float deltaTime, Terrain &terrain);
+    void update(float deltaTime, Terrain &terrain, float windForce);
     void draw(sf::RenderWindow &window) const;
 
     // 🔥 Törmäystarkistus

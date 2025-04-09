@@ -25,6 +25,8 @@ Game::Game()
       eventManager(tank1, tank2, *this),
       tank1StartPosition(100, 0), // Alkuperäinen sijainti tankille 1
       tank2StartPosition(1800, 0) // Alkuperäinen sijainti tankille 2
+    gravity(Config::GRAVITY),
+    windForce(Config::getRandomWind()),
 
 {
     printCurrentWorkingDirectory(); // Tulostetaan nykyinen hakemisto
@@ -57,9 +59,9 @@ Game::Game()
         }
     }
 
-    // 🔥 Alustetaan satunnainen tuuli (-0.0005f....0.0005f välillä)
+    // 🔥 Alustetaan satunnainen tuuli
     std::srand(std::time(nullptr));
-    windForce = (std::rand() % 200 - 100) / 100000.0f;
+    windForce = Config::getRandomWind();  //
 }
 
 
@@ -128,7 +130,7 @@ void Game::update() {
     terrain.update(deltaTime); // 🔥 Päivitetään tähdenlennot
 
     for (auto &proj : projectiles) {
-        proj.update(deltaTime, terrain);
+        proj.update(deltaTime, terrain, windForce);
 
         // Ammus ei osu omaan tankkiin, vain vastustajaan
         if (proj.alive && proj.getBounds().intersects(opponentTank.getBounds())) {
@@ -192,6 +194,7 @@ void Game::render() {
 
     // Piirretään vuorossa olevan tankin hp ja polttoaine
     UI::drawTankHp(window, font, currentTank);  // Piirrä hp vain kerran
+    UI::drawWindBarIndicator(window, windForce);
     UI::drawFuelMeter(window, font, currentTank);
     // 🔥 Piirrä kaikki räjähdysefektit
     for (const auto& e : explosions) {
@@ -298,8 +301,8 @@ void Game::resetGame() {
     eventManager.reset(tank1, tank2, *this);
     projectiles.clear(); // Tyhjennetään ammukset
 
-    windForce = (std::rand() % 200 - 100) / 100000.0f;
-    gravity = 0.0005f;
+    gravity = Config::GRAVITY;
+    windForce = Config::getRandomWind();
 
     turnClock.restart();
     waitingForTurnSwitch = false;

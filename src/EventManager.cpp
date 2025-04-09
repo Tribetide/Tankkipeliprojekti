@@ -4,6 +4,7 @@
 #include <ctime>     // 🔥 Aikasiemen satunnaislukujen alustamiseen
 #include <cmath>
 #include "Game.hpp"
+#include <Config.hpp>
 
 float EventManager::getTimeLeft() const {
     // 🔥 Jos ajastin on pysäytetty, näytetään jäljellä oleva aika tallennetusta arvosta
@@ -83,7 +84,7 @@ void EventManager::switchTurn(float &windForce, Game &game) {
     // Jos peli ei ole vielä päättynyt, vaihdetaan vuoro
     currentTank = (currentTank == 0) ? 1 : 0;
     turnClock.restart();
-    windForce = (std::rand() % 100 - 50) / 100000.0f;  // 🔥 Arvotaan uusi tuuli
+    windForce = Config::getRandomWind();  // 🔥 Arvotaan uusi tuuli
 
     //  Resetoi polttoaine uuden vuoron alkaessa
     if (currentTank == 0) {
