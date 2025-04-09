@@ -16,8 +16,9 @@ class Game {
 public:
     Game();
     void run();
-    void endGame();  // 🔥 Lisätty julkiseksi
-    void resetGame();  // Lisää tämä metodi
+    void endGame();  
+    void resetGame(); 
+    
 
 private:
     void processEvents();
@@ -47,6 +48,8 @@ private:
 
     sf::Vector2f tank1StartPosition;
     sf::Vector2f tank2StartPosition;
+    
+    sf::Clock globalClock;
 
 
 };
