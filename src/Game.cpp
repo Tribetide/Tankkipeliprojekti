@@ -137,26 +137,26 @@ void Game::update() {
     
     terrain.update(deltaTime); // 🔥 Päivitetään tähdenlennot
 
-    for (auto &proj : projectiles) {
+    for (auto &proj : projectiles) { // 🔥 Ammusten päivitys
+        // Päivitetään ammuksen liike
         proj.update(deltaTime, terrain, windForce);
-
-        // Ammus ei osu omaan tankkiin, vain vastustajaan
+    
+        // Tarkistetaan, osuuko ammuksen rajat vastustajan tankin rajojen kanssa
         if (proj.alive && proj.getBounds().intersects(opponentTank.getBounds())) {
-            // Aseta vastustajan vahinkoja
             opponentTank.takeDamage(30);
-            
-            // Luodaan räjähdyksen efekti ammuksen osumakohdassa
             explosions.emplace_back(proj.shape.getPosition());
-            
-            // Merkitään ammus "kuolleeksi", jotta sitä ei käsitellä enää
             proj.alive = false;
-
-            // Tuhotaan maasto räjähdyspaikassa. 
-            // Ensimmäinen parametri = sijainti, toinen = tuhoamissäde (baseRadius).
-            terrain.destroy(proj.shape.getPosition(), 60);
-
-            // Soitetaan räjähdys-ääni
+            terrain.destroy(proj.shape.getPosition(), 60); // 60:lla määritellään laajempi tuhoamisalue
             SoundManager::getInstance().playSound("explosion", 100.f);
+        }
+    
+        // Jos ammus osuu myös maahan
+        if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
+            explosions.emplace_back(proj.shape.getPosition());
+            proj.alive = false;
+            terrain.destroy(proj.shape.getPosition(), 50);
+            SoundManager::getInstance().playSound("explosion", 100.f);
+            std::cout << "Räjähdyksiä aktiivisena: " << explosions.size() << std::endl;
         }
     
         if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {

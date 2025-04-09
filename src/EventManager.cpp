@@ -30,17 +30,10 @@ EventManager::EventManager(Tank &t1, Tank &t2, Game &g)
     }
 
 
-    void EventManager::handleShot(Projectile &projectile, Terrain &terrain) {
+    /*void EventManager::handleShot(Projectile &projectile, Terrain &terrain) {
         if (!projectile.alive) return;  // 🔥 Jos ammus on jo "kuollut", älä käsittele uudelleen
     
         Tank &opponent = (currentTank == 0) ? tank2 : tank1;
-    
-        // 🔥 Tarkistetaan, osuuko ammuksen sijainti tankkiin
-      //  if (opponent.getGlobalBounds().contains(projectile.shape.getPosition())) {
-      //      std::cout << "Osuma tankkiin!" << std::endl;
-      //      opponent.takeDamage(20);
-      //      projectile.alive = false;  // 🔥 Ammus kuolee osuessaan
-      //  }
     
         // 🔥 Tarkistetaan, onko ammus osunut maahan
         if (terrain.checkCollision(projectile.shape.getPosition())) {
@@ -52,7 +45,7 @@ EventManager::EventManager(Tank &t1, Tank &t2, Game &g)
             waitingForTurnSwitch = true;  // 🔥 Odotetaan ennen vuoron vaihtoa
             turnSwitchClock.restart();  // 🔥 Käynnistetään viivekello
         }
-    }
+    }*/
 
 void EventManager::update(const std::vector<Projectile>& projectiles) {
     if (waitingForTurnSwitch) {
