@@ -1,5 +1,7 @@
 #include "Tank.hpp"
 #include "Terrain.hpp"  // Lisätty, jotta voidaan käyttää Terrain-olioita
+#include "Config.hpp"
+#include "Projectile.hpp"
 #include <cmath>  // Tämä tarvitaan trigonometristen funktioiden käyttöön
 #include "SoundManager.hpp"
 #include <SFML/Audio.hpp> // sf::Sound
@@ -117,7 +119,21 @@ void Tank::move(float dx, Terrain &terrain) {
 
 void Tank::update(Terrain &terrain, float gravity) {
     sf::Vector2f position = upperBody.getPosition();
-    float moveAmount = gravity * 550.0f;  // Testataan suuremmalla arvolla
+
+        // Tarkista ensin, onko tankki osunut aktiiviseen räjähdykseen
+    // (Voit pitää esimerkiksi lista räjähdyksistä ja käydä niitä läpi)
+    bool isUnderExplosion = false;
+    
+
+    // ... (toteuta logiikka, joka asettaa isUnderExplosion = true jos tankin ala osuu räjähdyksen alueelle)
+
+    if (isUnderExplosion) {
+        // Älä muokkaa tankin y-koordinaattia, säilytä se nykyisenä
+        return;
+    }
+
+
+    float moveAmount = gravity/100.0f;  // Testataan suuremmalla arvolla
 
     // Tarkistetaan, onko tankin alla vielä maata
     if (!terrain.checkCollision(sf::Vector2f(position.x + 30, position.y + 45))) {
@@ -199,49 +215,28 @@ Projectile Tank::shoot() {
     p.shape.setRadius(5.f);
     p.shape.setFillColor(sf::Color::Red);
 
-    float radianAngle = (angle - 90.0f) * (3.14159265f / 180.0f);
+    // Lasketaan ammuksen lähtönopeus ja suunta
+    float radianAngle = (angle - 90.0f) * (3.14159265f / 180.0f); // Muutetaan kulma radiaaneiksi
 
-    // Lasketaan ammuksen lähtöpaikka, tykin kärki
+    // Asetetaan ammuksen lähtöpaikka, tykin kärki
     float muzzleX = turret.getPosition().x + std::cos(radianAngle) * 30;
     float muzzleY = turret.getPosition().y + std::sin(radianAngle) * 30;
     p.shape.setPosition(muzzleX, muzzleY);
 
-    // Vakio lähtönopeus (hidastettu, jotta painovoima ehtii vaikuttaa)
-    float baseSpeed = 150.0f; //pikseliä sekunnissa
+    // Lasketaan ammuksen nopeus
+    float speed = Config::BASE_PROJECTILE_SPEED
+     + (power / 100.0f) * Config::MAX_EXTRA_PROJECTILE_SPEED; // Nopeus riippuu voiman säädöstä
+     
+    p.velocity = sf::Vector2f(std::cos(radianAngle) * speed, std::sin(radianAngle) * speed); // Ammuksen nopeus ja suunta
 
-    // Skaalataan nopeus voiman mukaan (pienellä skaalauksella)
-    float speed = baseSpeed + (power / 100.0f) * 150.f; // 150 pikseliä sekunnissa maksimissaan
-
-    p.velocity = sf::Vector2f(std::cos(radianAngle) * speed, std::sin(radianAngle) * speed);
-
-    // Voima vaikuttaa painovoimaan, jolloin suurempi power = pienempi painovoima
-    p.setGravity(0.0005f + (100.0f - power) / 10000.0f); 
-
+  
+    // Ammuksen "elinvoimaisuus"
     p.alive = true;
     return p;
 
     
 }
 
-/*void Tank::placeOnTerrain(Terrain &terrain, int startX) {
-    // Etsitään maan korkein kohta annetusta x-koordinaatista
-    int yFound = 0;
-    for (int i = 0; i < 1080; i++) {
-        if (terrain.checkCollision(sf::Vector2f(startX, i))) {
-            yFound = i - 40; // Tankin sijoitus (jotta ei jää maaston sisään)
-            break;
-        }
-    }
-
-    // Varmistetaan, ettei y-arvo ole negatiivinen
-    yFound = std::max(yFound, 0);
-
-    // Asetetaan tankin osat uudelle paikalle
-    upperBody.setPosition(startX, yFound);
-    lowerBody.setPosition(startX - 15, yFound + 30);
-    turret.setPosition(startX + 25, yFound);
-}
-*/
 void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain, 
                         std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, 
                         sf::Clock &turnClock) {

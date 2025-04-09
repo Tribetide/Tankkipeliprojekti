@@ -10,6 +10,8 @@ public:
     void draw(sf::RenderWindow& window) const;
     bool isFinished() const;
 
+    sf::FloatRect getBounds() const { return shape.getGlobalBounds(); }
+
 private:
     sf::CircleShape shape;
     float duration;
