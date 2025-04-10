@@ -11,6 +11,7 @@
 #include <SoundManager.hpp>
 #include "Tank.hpp"
 #include "Explosion.hpp"
+#include "Terrain.hpp"
 
 
 void printCurrentWorkingDirectory() {
@@ -19,12 +20,24 @@ void printCurrentWorkingDirectory() {
               << std::endl;
 }
 
+// Apufunktio, joka tarkistaa, osuuko tankki räjähdyksen vaikutusalueelle.
+bool isTankInExplosionArea(const Tank &tank, const std::vector<Explosion> &explosions) {
+    sf::FloatRect tankBounds = tank.getBounds();
+    for (const Explosion &expl : explosions) {
+        if (tankBounds.intersects(expl.getBounds())) {
+            return true;
+        }
+    }
+    return false;
+}
+
 Game::Game()
-    : window(sf::VideoMode(1920, 1080), "Rikkoutuva maasto ja tankki"),
-      gravity(0.0005f),
-      eventManager(tank1, tank2, *this),
-      tank1StartPosition(100, 0), // Alkuperäinen sijainti tankille 1
-      tank2StartPosition(1800, 0) // Alkuperäinen sijainti tankille 2
+    : window(sf::VideoMode(1920, 1080), "Tankkipeli"),
+    gravity(Config::GRAVITY),
+    windForce(Config::getRandomWind()),
+    eventManager(tank1, tank2, *this),
+    tank1StartPosition(100, 0), // Alkuperäinen sijainti tankille 1
+    tank2StartPosition(1800, 0) // Alkuperäinen sijainti tankille 2
 
 {
     printCurrentWorkingDirectory(); // Tulostetaan nykyinen hakemisto
@@ -57,9 +70,9 @@ Game::Game()
         }
     }
 
-    // 🔥 Alustetaan satunnainen tuuli (-0.0005f....0.0005f välillä)
+    // 🔥 Alustetaan satunnainen tuuli
     std::srand(std::time(nullptr));
-    windForce = (std::rand() % 200 - 100) / 100000.0f;
+    windForce = Config::getRandomWind();  //
 }
 
 
@@ -82,10 +95,24 @@ void Game::processEvents() {
         if (waitingForTurnSwitch) 
             return;
 
+            // 🔥 Määritä aktiivinen tankki ja vastustaja
             Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+            const Tank &opponentTank = (eventManager.getCurrentTurn() == 0) ? tank2 : tank1;
 
             if (event.type == sf::Event::KeyPressed) {
-                activeTank.handleInput(event.key.code, terrain, projectiles, waitingForTurnSwitch, turnClock);
+                activeTank.handleInput(event.key.code, terrain, projectiles, waitingForTurnSwitch, turnClock, opponentTank);
+        }
+            // Hiiriohjaus päällä pitää painaa "m" :D
+            if (activeTank.mouseControlEnabled) {
+                activeTank.handleMouseInput(window, projectiles, waitingForTurnSwitch, turnClock);
+        }
+
+            if (event.type == sf::Event::MouseWheelScrolled) {
+                Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+                if (activeTank.mouseControlEnabled) {
+                    float delta = event.mouseWheelScroll.delta;
+                    activeTank.adjustPower(delta * 5.0f); // Voiman säätö scrollilla
+                }
         }
     }
 }
@@ -97,23 +124,21 @@ void Game::update() {
     for (auto &e : explosions) {
         e.update(deltaTime);
     }
-    explosions.erase(
-        std::remove_if(explosions.begin(), explosions.end(),
+    explosions.erase( // 🔥 Poista räjähdykset, jotka ovat valmiita
+        std::remove_if(explosions.begin(), explosions.end(), 
                         [](const Explosion &e) { return e.isFinished(); }),
         explosions.end()
     );
-    if (waitingForTurnSwitch) {
-        if (turnClock.getElapsedTime().asSeconds() >= 2.0f && !eventManager.anyProjectilesAlive(projectiles)) {
-            eventManager.switchTurn(windForce, *this);  // 🔥 Lisätty `*this`
-            waitingForTurnSwitch = false;
-            eventManager.restartTurnTimer();
+   
+    // Päivitä tankit
+    auto updateTankWithExplosionCheck = [&](Tank& t) {
+        if (!isTankInExplosionArea(t, explosions)) {
+            t.update(terrain, gravity);
         }
-    }
+    };
 
-    
-
-    // 🔥 Päivitä eventManager ja anna sille projektiililista
-    eventManager.update(projectiles);
+    updateTankWithExplosionCheck(tank1);
+    updateTankWithExplosionCheck(tank2);
 
 
     // 🔥 Määritä aktiivinen tankki sekä vastustajan
@@ -127,35 +152,40 @@ void Game::update() {
     
     terrain.update(deltaTime); // 🔥 Päivitetään tähdenlennot
 
-    for (auto &proj : projectiles) {
-        proj.update(deltaTime, terrain);
-
-        // Ammus ei osu omaan tankkiin, vain vastustajaan
+    for (auto &proj : projectiles) { // 🔥 Ammusten päivitys
+        // Päivitetään ammuksen liike
+        proj.update(deltaTime, terrain, windForce);
+    
+        // Tarkistetaan, osuuko ammuksen rajat vastustajan tankin rajojen kanssa
         if (proj.alive && proj.getBounds().intersects(opponentTank.getBounds())) {
             opponentTank.takeDamage(30);
+            explosions.emplace_back(proj.shape.getPosition());
             proj.alive = false;
+            std::vector<sf::Vector2i> destroyed = terrain.destroy(proj.shape.getPosition(), 60);
+            spawnDebris(destroyed, proj.shape.getPosition());; // 60:lla määritellään laajempi tuhoamisalue
+            SoundManager::getInstance().playSound("explosion", 100.f);
+        }
+    
+        // Jos ammus osuu myös maahan
+        if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
+            explosions.emplace_back(proj.shape.getPosition());
+            proj.alive = false;
+            std::vector<sf::Vector2i> destroyed = terrain.destroy(proj.shape.getPosition(), 50);
+            spawnDebris(destroyed, proj.shape.getPosition());
+            SoundManager::getInstance().playSound("explosion", 100.f);
+            std::cout << "Räjähdyksiä aktiivisena: " << explosions.size() << std::endl;
         }
     
         if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
             explosions.emplace_back(proj.shape.getPosition()); // 🔥 Lisää räjähdys
             proj.alive = false;
-            terrain.destroy(proj.shape.getPosition(), 50);
+            std::vector<sf::Vector2i> destroyed = terrain.destroy(proj.shape.getPosition(), 50);
+            spawnDebris(destroyed, proj.shape.getPosition());
             SoundManager::getInstance().playSound("explosion", 100.f);
             std::cout << "Räjähdyksiä aktiivisena: " << explosions.size() << std::endl;
 
         }
     }
-        // 🔥 Päivitä kaikki räjähdykset
-        for (auto &e : explosions) {
-            e.update(deltaTime);
-        }
-        explosions.erase(
-            std::remove_if(explosions.begin(), explosions.end(),
-                            [](const Explosion &e) { return e.isFinished(); }),
-            explosions.end()
-    );
-
-
 
     // 🔥 Poista kuolleet ammukset listasta
     projectiles.erase(
@@ -163,6 +193,37 @@ void Game::update() {
             return !p.alive;
         }),
         projectiles.end()
+    );
+
+    // 🔥 Päivitä eventManager ja anna sille projektiililista
+    eventManager.update(projectiles);
+
+    if (waitingForTurnSwitch) { // 🔥 Odotetaan vuoron vaihtoa
+        if (turnClock.getElapsedTime().asSeconds() >= 2.0f && !eventManager.anyProjectilesAlive(projectiles)) {
+            eventManager.switchTurn(windForce, *this);  // 🔥 Lisätty `*this`
+            waitingForTurnSwitch = false;
+            eventManager.restartTurnTimer();
+        }
+    }
+
+    // Päivitä partikkelit
+    for (auto &d : debrisList) {
+        // Liike
+        d.position += d.velocity * deltaTime;
+        // Painovoima
+        d.velocity.y += gravity * 0.5f * deltaTime; 
+        // Hiljalleen hidastusta, jos haluat
+        // d.velocity.x *= 0.99f;
+
+        // Vähennä elinaikaa
+        d.lifetime -= deltaTime;
+    }
+
+    // Poista kuolleet partikkelit
+    debrisList.erase(
+        std::remove_if(debrisList.begin(), debrisList.end(),
+            [](const Debris &d){ return d.lifetime <= 0; }),
+        debrisList.end()
     );
 }
 
@@ -172,11 +233,29 @@ void Game::render() {
     window.draw(moonSprite);
     terrain.draw(window);
 
+    float totalTime = globalClock.getElapsedTime().asSeconds();
+
+    // 🔥 Piirrä kaikki räjähdysefektit
+    for (const auto& e : explosions) {
+        e.draw(window);
+    }
+
+    // Piirretään tankit
     tank1.draw(window);
     tank2.draw(window);
 
+    // Piiretään ammukset
     for (auto &p : projectiles) {
         if (p.alive) window.draw(p.shape);
+    }
+
+    //Piirreään debris-partikkelit
+    for (auto &d : debrisList) {
+        // Valitse jokin piirrettävä muoto (esim. pieni ympyrä).
+        sf::CircleShape shape(3.f); 
+        shape.setPosition(d.position);
+        shape.setFillColor(d.color);
+        window.draw(shape);
     }
 
     // Hae vuorossa oleva tankki
@@ -188,15 +267,9 @@ void Game::render() {
     UI::drawAngleText(window, font, currentTank);
     UI::drawPowerText(window, font, currentTank);
     UI::drawWindText(window, font, windForce);
-    UI::drawWindIndicator(window, windForce);
-
-    // Piirretään vuorossa olevan tankin hp ja polttoaine
-    UI::drawTankHp(window, font, currentTank);  // Piirrä hp vain kerran
+    UI::drawWindBarIndicator(window, windForce);
+    UI::drawTankHp(window, font, currentTank); 
     UI::drawFuelMeter(window, font, currentTank);
-    // 🔥 Piirrä kaikki räjähdysefektit
-    for (const auto& e : explosions) {
-        e.draw(window);
-    }
 
 
     window.display();
@@ -285,6 +358,36 @@ void Game::endGame() {
     }
 }
 
+void Game::spawnDebris(const std::vector<sf::Vector2i>& destroyedPixels, sf::Vector2f center) {
+    // esim. rajoitetaan partikkelien maksimimäärää
+    int maxParticles = 100;  
+    int count = 0;
+
+    for (auto &pix : destroyedPixels) {
+        if (count >= maxParticles) break;
+
+        // Sijainti float-muodossa:
+        sf::Vector2f pos((float)pix.x, (float)pix.y);
+
+        // Haetaan pikselille satunnainen nopeus
+        // (pienet hajonnat, esim. -100..100 x, -300.. -100 y)
+        float vx = -100 + std::rand() % 201;   // 
+        float vy = -100 + std::rand() % 201;  // 
+        sf::Vector2f vel(vx, vy);
+
+        // Väri (voit tallettaa col suoraan, jos tallensit sen jo)
+        sf::Color col = sf::Color::Green;  // esim. vihreä
+        // Tai anna random tummuus-sävy:
+        // col.r = 0; col.g = 128 + (std::rand()%128); col.b = 0; col.a = 255;
+
+        // Partikkelin elinaika, esim. 3..4 sekuntia
+        float life = 3.0f + (std::rand() % 20) / 10.f;
+
+        debrisList.emplace_back(pos, vel, col, life);
+        count++;
+    }
+}
+
 
 void Game::resetGame() {
     // Nollataan maasto ensin
@@ -298,8 +401,8 @@ void Game::resetGame() {
     eventManager.reset(tank1, tank2, *this);
     projectiles.clear(); // Tyhjennetään ammukset
 
-    windForce = (std::rand() % 200 - 100) / 100000.0f;
-    gravity = 0.0005f;
+    gravity = Config::GRAVITY;
+    windForce = Config::getRandomWind();
 
     turnClock.restart();
     waitingForTurnSwitch = false;

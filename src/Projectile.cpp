@@ -1,28 +1,30 @@
+#include "Config.hpp"
 #include "Projectile.hpp"
 #include <SoundManager.hpp>
+#include <SFML/Graphics.hpp>
 
 
-Projectile::Projectile() : velocity(0.f, 0.f), alive(false), gravity(0.0005f) {
+Projectile::Projectile() : velocity(0.f, 0.f), alive(false), gravity(Config::GRAVITY) {
     shape.setRadius(5.f);
     shape.setFillColor(sf::Color::White);
 }
 
-void Projectile::setGravity(float g) {
-    gravity = g;
-}
 
-void Projectile::update(float deltaTime, Terrain &terrain) {
+void Projectile::update(float deltaTime, Terrain &terrain, float windForce) {
     if (!alive) return;
 
     // 🔥 Perusliike
     shape.move(velocity.x * deltaTime, velocity.y * deltaTime);
 
-    // 🔥 Painovoima vaikuttaa Y-akseliin
-    velocity.y += gravity * (1000.f * deltaTime); 
+    // 🔥 Painovoima (hidastuminen y-suuntaan)
+    velocity.y += gravity * deltaTime;
+
+    // Tuuli (kiihtyvyys x-suuntaan)
+    velocity.x += windForce * deltaTime;
 
     // 🔥 Tuhoutuminen, jos ammus menee ruudun ulkopuolelle
     sf::Vector2f pos = shape.getPosition();
-    if (pos.x < -50 || pos.x > 2000 || pos.y < -50 || pos.y > 1200) {
+    if (pos.x < -50 || pos.x > 2000 || pos.y < -1000 || pos.y > 1200) {
         alive = false;
     }
 }

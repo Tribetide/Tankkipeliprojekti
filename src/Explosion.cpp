@@ -3,7 +3,7 @@
 #include <iostream>
 
 Explosion::Explosion(sf::Vector2f position)
-    : duration(10.0f), timePassed(0.0f)
+    : duration(2.0f), timePassed(0.0f)
 {
     shape.setRadius(10.f); // Alkuarvo isommaksi
     shape.setOrigin(10.f, 10.f);

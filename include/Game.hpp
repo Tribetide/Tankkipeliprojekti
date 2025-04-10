@@ -16,8 +16,10 @@ class Game {
 public:
     Game();
     void run();
-    void endGame();  // 🔥 Lisätty julkiseksi
-    void resetGame();  // Lisää tämä metodi
+    void endGame();  
+    void resetGame();
+    void spawnDebris(const std::vector<sf::Vector2i>& destroyedPixels, sf::Vector2f center);
+    
 
 private:
     void processEvents();
@@ -32,6 +34,9 @@ private:
     bool isPlayerOneTurn; // Vuorottelua
     sf::Texture moonTexture;
     sf::Sprite moonSprite;
+    std::vector<Debris> debrisList; // 🔥 Partikkelit
+  
+
 
 
     Terrain terrain;
@@ -47,6 +52,8 @@ private:
 
     sf::Vector2f tank1StartPosition;
     sf::Vector2f tank2StartPosition;
+    
+    sf::Clock globalClock;
 
 
 };
