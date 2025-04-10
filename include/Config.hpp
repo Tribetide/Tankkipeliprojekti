@@ -7,11 +7,10 @@
 #pragma once
 
 namespace Config {
+    const std::string FONT_PATH_1 = "assets/fonts/SHOWG.TTF";       // 🔥 Oletuspolku
+    const std::string FONT_PATH_2 = "../assets/fonts/SHOWG.TTF";    // 🔥 Jos ajetaan `build/`
+    const std::string FONT_PATH_3 = "../../assets/fonts/SHOWG.TTF"; // 🔥 Jos ajetaan `build/Debug/`
 
-    // Fontin polut
-    const std::string FONT_PATH_1 = "assets/fonts/arial.ttf";       // 🔥 Oletuspolku
-    const std::string FONT_PATH_2 = "../assets/fonts/arial.ttf";    // 🔥 Jos ajetaan `build/`
-    const std::string FONT_PATH_3 = "../../assets/fonts/arial.ttf"; // 🔥 Jos ajetaan `build/Debug/`
 
     // Painovoima
     static const float GRAVITY = 50.0f; // painovoima, px/s^2, käytetään tankkien ja ammuksien liikkeessä
