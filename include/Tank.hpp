@@ -17,14 +17,21 @@ public:
 
 
     // 🔥 Liikkuminen ja ohjaus
-    void move(float dx, Terrain &terrain);
+    void move(float dx, Terrain &terrain, const Tank &opponent); 
     void rotateTurret(float angleDelta);
     void adjustPower(float powerDelta);
     Projectile shoot();
     void placeOnTerrain(Terrain &terrain, int startX);
     void handleInput(sf::Keyboard::Key key, Terrain &terrain, 
                     std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, 
-                    sf::Clock &turnClock);
+                    sf::Clock &turnClock, const Tank &opponent);
+    bool mouseControlEnabled = false;  // Uusi ohjaustila
+    void handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &projectiles,
+                            bool &waitingForTurnSwitch, sf::Clock &turnClock);
+    void toggleControlMode(); // Vaihtaa ohjaustilaa
+    float mouseDragStartY = -1.f;
+
+                    
 
 
     // 🔥 Tuhoutuminen ja elämäpisteet
@@ -34,6 +41,10 @@ public:
     bool isDestroyed() const { return destroyed; }
     int getFuel() const;
 
+    // Putoamisvahinko
+    float fallStartY = -1.f;
+    bool isFalling = false;
+
 
     // 🔥 Getterit
     float getAngle() const;
@@ -41,7 +52,7 @@ public:
     sf::Vector2f getPosition() const;
     sf::FloatRect getBounds() const ; // Törmäyslaatikko
 
-    void update();
+//    void update();                                            turha :D
 
     // 🔥 Reset (aloitustilanteeseen)
     void reset(Terrain& terrain, const sf::Vector2f& startPosition);

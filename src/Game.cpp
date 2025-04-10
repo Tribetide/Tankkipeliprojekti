@@ -95,10 +95,24 @@ void Game::processEvents() {
         if (waitingForTurnSwitch) 
             return;
 
+            // 🔥 Määritä aktiivinen tankki ja vastustaja
             Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+            const Tank &opponentTank = (eventManager.getCurrentTurn() == 0) ? tank2 : tank1;
 
             if (event.type == sf::Event::KeyPressed) {
-                activeTank.handleInput(event.key.code, terrain, projectiles, waitingForTurnSwitch, turnClock);
+                activeTank.handleInput(event.key.code, terrain, projectiles, waitingForTurnSwitch, turnClock, opponentTank);
+        }
+            // Hiiriohjaus päällä pitää painaa "m" :D
+            if (activeTank.mouseControlEnabled) {
+                activeTank.handleMouseInput(window, projectiles, waitingForTurnSwitch, turnClock);
+        }
+
+            if (event.type == sf::Event::MouseWheelScrolled) {
+                Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+                if (activeTank.mouseControlEnabled) {
+                    float delta = event.mouseWheelScroll.delta;
+                    activeTank.adjustPower(delta * 5.0f); // Voiman säätö scrollilla
+                }
         }
     }
 }
