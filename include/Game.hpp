@@ -17,7 +17,8 @@ public:
     Game();
     void run();
     void endGame();  
-    void resetGame(); 
+    void resetGame();
+    void spawnDebris(const std::vector<sf::Vector2i>& destroyedPixels, sf::Vector2f center);
     
 
 private:
@@ -33,6 +34,9 @@ private:
     bool isPlayerOneTurn; // Vuorottelua
     sf::Texture moonTexture;
     sf::Sprite moonSprite;
+    std::vector<Debris> debrisList; // 🔥 Partikkelit
+  
+
 
 
     Terrain terrain;

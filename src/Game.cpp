@@ -11,6 +11,7 @@
 #include <SoundManager.hpp>
 #include "Tank.hpp"
 #include "Explosion.hpp"
+#include "Terrain.hpp"
 
 
 void printCurrentWorkingDirectory() {
@@ -146,7 +147,8 @@ void Game::update() {
             opponentTank.takeDamage(30);
             explosions.emplace_back(proj.shape.getPosition());
             proj.alive = false;
-            terrain.destroy(proj.shape.getPosition(), 60); // 60:lla määritellään laajempi tuhoamisalue
+            std::vector<sf::Vector2i> destroyed = terrain.destroy(proj.shape.getPosition(), 60);
+            spawnDebris(destroyed, proj.shape.getPosition());; // 60:lla määritellään laajempi tuhoamisalue
             SoundManager::getInstance().playSound("explosion", 100.f);
         }
     
@@ -154,7 +156,8 @@ void Game::update() {
         if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
             explosions.emplace_back(proj.shape.getPosition());
             proj.alive = false;
-            terrain.destroy(proj.shape.getPosition(), 50);
+            std::vector<sf::Vector2i> destroyed = terrain.destroy(proj.shape.getPosition(), 50);
+            spawnDebris(destroyed, proj.shape.getPosition());
             SoundManager::getInstance().playSound("explosion", 100.f);
             std::cout << "Räjähdyksiä aktiivisena: " << explosions.size() << std::endl;
         }
@@ -162,7 +165,8 @@ void Game::update() {
         if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
             explosions.emplace_back(proj.shape.getPosition()); // 🔥 Lisää räjähdys
             proj.alive = false;
-            terrain.destroy(proj.shape.getPosition(), 50);
+            std::vector<sf::Vector2i> destroyed = terrain.destroy(proj.shape.getPosition(), 50);
+            spawnDebris(destroyed, proj.shape.getPosition());
             SoundManager::getInstance().playSound("explosion", 100.f);
             std::cout << "Räjähdyksiä aktiivisena: " << explosions.size() << std::endl;
 
@@ -187,6 +191,26 @@ void Game::update() {
             eventManager.restartTurnTimer();
         }
     }
+
+    // Päivitä partikkelit
+    for (auto &d : debrisList) {
+        // Liike
+        d.position += d.velocity * deltaTime;
+        // Painovoima
+        d.velocity.y += gravity * 0.5f * deltaTime; 
+        // Hiljalleen hidastusta, jos haluat
+        // d.velocity.x *= 0.99f;
+
+        // Vähennä elinaikaa
+        d.lifetime -= deltaTime;
+    }
+
+    // Poista kuolleet partikkelit
+    debrisList.erase(
+        std::remove_if(debrisList.begin(), debrisList.end(),
+            [](const Debris &d){ return d.lifetime <= 0; }),
+        debrisList.end()
+    );
 }
 
 
@@ -202,11 +226,22 @@ void Game::render() {
         e.draw(window);
     }
 
+    // Piirretään tankit
     tank1.draw(window);
     tank2.draw(window);
 
+    // Piiretään ammukset
     for (auto &p : projectiles) {
         if (p.alive) window.draw(p.shape);
+    }
+
+    //Piirreään debris-partikkelit
+    for (auto &d : debrisList) {
+        // Valitse jokin piirrettävä muoto (esim. pieni ympyrä).
+        sf::CircleShape shape(3.f); 
+        shape.setPosition(d.position);
+        shape.setFillColor(d.color);
+        window.draw(shape);
     }
 
     // Hae vuorossa oleva tankki
@@ -306,6 +341,36 @@ void Game::endGame() {
         window.draw(retryText);
         window.draw(quitText);
         window.display();
+    }
+}
+
+void Game::spawnDebris(const std::vector<sf::Vector2i>& destroyedPixels, sf::Vector2f center) {
+    // esim. rajoitetaan partikkelien maksimimäärää
+    int maxParticles = 100;  
+    int count = 0;
+
+    for (auto &pix : destroyedPixels) {
+        if (count >= maxParticles) break;
+
+        // Sijainti float-muodossa:
+        sf::Vector2f pos((float)pix.x, (float)pix.y);
+
+        // Haetaan pikselille satunnainen nopeus
+        // (pienet hajonnat, esim. -100..100 x, -300.. -100 y)
+        float vx = -100 + std::rand() % 201;   // 
+        float vy = -100 + std::rand() % 201;  // 
+        sf::Vector2f vel(vx, vy);
+
+        // Väri (voit tallettaa col suoraan, jos tallensit sen jo)
+        sf::Color col = sf::Color::Green;  // esim. vihreä
+        // Tai anna random tummuus-sävy:
+        // col.r = 0; col.g = 128 + (std::rand()%128); col.b = 0; col.a = 255;
+
+        // Partikkelin elinaika, esim. 3..4 sekuntia
+        float life = 3.0f + (std::rand() % 20) / 10.f;
+
+        debrisList.emplace_back(pos, vel, col, life);
+        count++;
     }
 }
 
