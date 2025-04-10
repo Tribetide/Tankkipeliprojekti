@@ -335,6 +335,9 @@ void Tank::handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &p
         float newAngle = std::atan2(dy, dx) * 180.0f / 3.14159f;
 
         angle = newAngle + 90;
+        if (angle < 0) angle += 360.0f; // Normalisointi 0–360
+        else if (angle >= 360.0f) angle -= 360.0f;
+        
         turret.setRotation(angle - 90.0f);
 
         mouseDragStartY = -1.f; // Nollataan drag-tila kun ei paineta oikeaa
