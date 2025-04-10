@@ -128,13 +128,35 @@ void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
 
 void Tank::update(Terrain &terrain, float gravity) {
     sf::Vector2f position = upperBody.getPosition();
-    float moveAmount = gravity * 550.0f;  // Testataan suuremmalla arvolla
+    float moveAmount = gravity * 550.0f;
 
-    // Tarkistetaan, onko tankin alla vielä maata
-    if (!terrain.checkCollision(sf::Vector2f(position.x + 30, position.y + 45))) {
+    sf::Vector2f checkPoint(position.x + 30, position.y + 45);
+
+    if (checkPoint.x >= 0 && checkPoint.x < 1920 && checkPoint.y >= 0 && checkPoint.y < 1080 && 
+        !terrain.checkCollision(checkPoint)) {
+        // Ei maata alla: pudotaan
         upperBody.move(0, moveAmount);
         lowerBody.move(0, moveAmount);
         turret.move(0, moveAmount);
+
+        if (!isFalling) {
+            isFalling = true;
+            fallStartY = position.y;
+        }
+    } else {
+        // Ollaan maan päällä
+        if (isFalling) {
+            isFalling = false;
+            float fallDistance = upperBody.getPosition().y - fallStartY;
+
+            // Jos pudotaan enemmän kuin 20 pikseliä, otetaan vahinkoa
+            if (fallDistance > 20.f) {
+                int damage = static_cast<int>((fallDistance - 50.f) * 0.2f); // esim. 1 dmg per 2 pikseliä
+                damage = std::max(damage, 0); // estetään negatiivinen damage
+                takeDamage(damage);
+                std::cout << "💥 Fall damage: " << damage << " (from " << fallDistance << "px drop)\n";
+            }
+        }
     }
 }
 

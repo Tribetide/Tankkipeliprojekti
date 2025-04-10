@@ -41,6 +41,10 @@ public:
     bool isDestroyed() const { return destroyed; }
     int getFuel() const;
 
+    // Putoamisvahinko
+    float fallStartY = -1.f;
+    bool isFalling = false;
+
 
     // 🔥 Getterit
     float getAngle() const;
