@@ -218,14 +218,15 @@ bool Terrain::checkCollision(sf::Vector2f position) {
     return false;
 }
 
-std::vector<sf::Vector2i> Terrain::destroy(sf::Vector2f position, int baseRadius) {
+// Tuhotaan pikseleitä maastosta
+std::vector<PixelInfo> Terrain::destroy(sf::Vector2f position, int baseRadius) {
     int x0 = static_cast<int>(position.x);
     int y0 = static_cast<int>(position.y);
 
     int radius = baseRadius + (y0 / 20); // Suurempi säde alhaalla, pienempi ylhäällä
 
     // Tässä voisit kerätä hajotettavat pikselit talteen:
-    std::vector<sf::Vector2i> destroyedPixels;
+    std::vector<PixelInfo> destroyedPixelInfos;
 
     for (int i = -radius; i <= radius; ++i) {
         for (int j = -radius; j <= radius; ++j) {
@@ -235,9 +236,15 @@ std::vector<sf::Vector2i> Terrain::destroy(sf::Vector2f position, int baseRadius
                 if (x >= 0 && x < (int)terrainImage.getSize().x &&
                     y >= 0 && y < (int)terrainImage.getSize().y) 
                 {
-                    // Jos pikseli ei ole jo läpinäkyvä, lisää se "tuhoutuneisiin"
-                    if (terrainImage.getPixel(x, y).a != 0) {
-                        destroyedPixels.push_back({x, y});
+// Lue pikselin väri ENNEN tyhjentämistä:
+                    sf::Color oldColor = terrainImage.getPixel(x, y);
+
+                    // Jos pikseli ei ole jo läpinäkyvä, tallenna info
+                    if (oldColor.a != 0) {
+PixelInfo info;
+                        info.coords = sf::Vector2i(x, y);
+                        info.color  = oldColor;
+                        destroyedPixelInfos.push_back(info);
                     }
                     // Tyhjennetään pikseli (läpinäkyvä)
                     terrainImage.setPixel(x, y, sf::Color::Transparent);
@@ -249,8 +256,6 @@ std::vector<sf::Vector2i> Terrain::destroy(sf::Vector2f position, int baseRadius
     // Päivitetään tekstuuri
     texture.update(terrainImage);
 
-    // Kutsutaan ulkopuolista metodia (esim. Game:sta) luomaan partikkelit
-    // (Sinun pitää siis välittää "destroyedPixels" jollain keinoin Game-luokkaan, 
-    //  tai pitää "debrisList" suoraan Terrain-luokan sisällä.)
-    return destroyedPixels;
+    // Palautetaan tuhotut pikselit
+        return destroyedPixelInfos;
 }

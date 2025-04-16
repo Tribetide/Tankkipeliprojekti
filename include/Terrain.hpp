@@ -4,8 +4,10 @@
 #include <SFML/Graphics.hpp>
 #include <vector>
 
-
-
+struct PixelInfo {
+    sf::Vector2i coords;
+    sf::Color color;
+};
 
 class Terrain {
 public:
@@ -14,7 +16,7 @@ public:
     void draw(sf::RenderWindow &window);             // Piirtää maaston
     bool checkCollision(sf::Vector2f position);      // Törmäystarkistus
     //void destroy(sf::Vector2f position, int radius); // Tuhotaan pikseleitä
-    std::vector<sf::Vector2i> destroy(sf::Vector2f position, int baseRadius);
+    std::vector<PixelInfo> destroy(sf::Vector2f position, int baseRadius);
     void createSky();                                // Luo tähdet
     void update(float deltaTime);                    // Päivittää tähdenlennot
 

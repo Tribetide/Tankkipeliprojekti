@@ -18,7 +18,7 @@ public:
     void run();
     void endGame();  
     void resetGame();
-    void spawnDebris(const std::vector<sf::Vector2i>& destroyedPixels, sf::Vector2f center);
+    void spawnDebris(const std::vector<PixelInfo>& destroyedPixels, sf::Vector2f center);;
     
 
 private:
