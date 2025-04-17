@@ -378,11 +378,11 @@ window.draw(totalScore);
     sf::sleep(sf::seconds(3));
 
     // Siirrytään vaihtoehtoihin
-    sf::Text retryText("1. Retry", font, 30);
-    retryText.setPosition(800, 500);
+    sf::Text retryText("1. Retry", font, 45);
+    retryText.setPosition(800, 400);
     retryText.setFillColor(sf::Color::Green);
 
-    sf::Text quitText("2. Quit", font, 30);
+    sf::Text quitText("2. Quit", font, 45);
     quitText.setPosition(800, 500);
     quitText.setFillColor(sf::Color::Yellow);
 
