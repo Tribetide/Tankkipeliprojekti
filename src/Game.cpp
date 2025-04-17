@@ -221,6 +221,18 @@ void Game::update() {
         projectiles.end()
     );
 
+    // Tank 1 tuhoutuminen
+    if (tank1.isDestroyed() && !tank1DestroyedFxDone) {
+        explosions.emplace_back(tank1.getPosition());  // pieni tuliräjähdys
+        tank1DestroyedFxDone = true;
+    }
+    // Tank 2 tuhoutuminen
+    if (tank2.isDestroyed() && !tank2DestroyedFxDone) {
+        explosions.emplace_back(tank2.getPosition());
+        tank2DestroyedFxDone = true;
+    }
+
+
     // 🔥 Päivitä eventManager ja anna sille projektiililista
     eventManager.update(projectiles);
 
@@ -279,9 +291,11 @@ void Game::render() {
         e.draw(window);
     }
 
-    // Piirretään tankit
-    tank1.draw(window);
-    tank2.draw(window);
+    // Piirretään vain elossa olevat tankit
+    if (!tank1.isDestroyed())
+        tank1.draw(window);
+    if (!tank2.isDestroyed())
+        tank2.draw(window);
 
     // Piiretään ammukset
     for (auto &p : projectiles) {
@@ -301,8 +315,10 @@ void Game::render() {
     Tank &currentTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
 
     if (!waitingForTurnSwitch) {
-        sf::Vector2f aimPos = currentTank.getAimPoint(); // 500 px
-        UI::drawCrosshair(window, aimPos);
+        if (!currentTank.isDestroyed()) {
+                sf::Vector2f aimPos = currentTank.getAimPoint(); // 500 px
+                UI::drawCrosshair(window, aimPos);
+            }
     }
 
     // ristiä ei  näy ammuksen lentäessä
@@ -317,8 +333,11 @@ void Game::render() {
     UI::drawPowerText(window, font, currentTank);
     UI::drawWindText(window, font, windForce);
     UI::drawWindBarIndicator(window, windForce);
-    UI::drawTankHp(window, font, currentTank); 
-    UI::drawFuelMeter(window, font, currentTank);
+    // Näytä tankin elinvoima ja polttoaine vain, jos tankki ei ole tuhottu
+    if (!currentTank.isDestroyed()) {
+            UI::drawTankHp(window, font, currentTank);
+            UI::drawFuelMeter(window, font, currentTank);
+        }
 
     sf::Text scoreText;
     scoreText.setFont(font);
@@ -368,9 +387,9 @@ void Game::endGame() {
     sf::Text totalScore("T1: " + std::to_string(tank1Wins) + 
                     " | T2: " + std::to_string(tank2Wins) +
                     " | Draws: " + std::to_string(draws), font, 30);
-totalScore.setFillColor(sf::Color::White);
-totalScore.setPosition(200, 280);
-window.draw(totalScore);
+    totalScore.setFillColor(sf::Color::White);
+    totalScore.setPosition(200, 280);
+    window.draw(totalScore);
 
     window.display();
 
@@ -446,15 +465,12 @@ void Game::spawnDebris(const std::vector<PixelInfo>& destroyedPixels, sf::Vector
         sf::Vector2f pos((float)pixInfo.coords.x, (float)pixInfo.coords.y);
 
         // Haetaan pikselille satunnainen nopeus
-        // (pienet hajonnat, esim. -100..100 x, -300.. -100 y)
         float vx = -100 + std::rand() % 201;   // 
         float vy = -100 + std::rand() % 201;  // 
         sf::Vector2f vel(vx, vy);
 
-        // Väri (voit tallettaa col suoraan, jos tallensit sen jo)
-        sf::Color col = pixInfo.color;  // esim. vihreä
-        // Tai anna random tummuus-sävy:
-        // col.r = 0; col.g = 128 + (std::rand()%128); col.b = 0; col.a = 255;
+        // Väri 
+        sf::Color col = pixInfo.color;  
 
         // Partikkelin elinaika
         float life = 9.0f + (std::rand() % 20) / 10.f;
@@ -472,6 +488,15 @@ void Game::resetGame() {
     // Nollataan tankkien sijainnit ja tilat alkuperäisiin sijainteihin
     tank1.reset(terrain, tank1StartPosition); // Tarkistaa uuden maaston
     tank2.reset(terrain, tank2StartPosition); // Tarkistaa uuden maaston
+
+    // Nollataan räjähdykset ja partikkelit
+    explosions.clear(); // Tyhjennetään räjähdykset
+    debrisList.clear(); // Tyhjennetään partikkelit
+
+    // Nollataan tankkien tuhoamisflagit
+    tank1DestroyedFxDone = false;
+    tank2DestroyedFxDone = false;
+
 
     // Nollataan EventManager ja muut pelitilat
     eventManager.reset(tank1, tank2, *this);

@@ -15,11 +15,16 @@ int main() {
     if (!soundMgr.loadSound("fire", "assets/sounds/Fire.ogg")) {
         std::cerr << "Virhe ladattaessa Fire.ogg\n";
     }
-    if (!soundMgr.loadSound("explosion", "assets/sounds/Explosion.mp3")) {
-        std::cerr << "Virhe ladattaessa Explosion.mp3\n";
+    if (!soundMgr.loadSound("explosion", "assets/sounds/Explosion.ogg")) {
+        std::cerr << "Virhe ladattaessa Explosion.ogg\n";
     }
     if (!soundMgr.loadMusic("war", "assets/sounds/War.ogg")) {
         std::cerr << "Virhe ladattaessa War.ogg\n";
+    }
+    if (!soundMgr.loadSound("tank_destroyed",
+            "assets/sounds/Tank_Destroyed.ogg"))           // ←  tarkista tiedostonimi!
+    {
+        std::cerr << "Virhe ladattaessa Tank_Destroyed.ogg\n";
     }
 
     // 3. Soita War.ogg (30% volume, toistuu loopissa)

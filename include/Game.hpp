@@ -47,6 +47,8 @@ private:
 
     EventManager eventManager;
     bool waitingForTurnSwitch = false;
+    bool tank1DestroyedFxDone = false;
+    bool tank2DestroyedFxDone = false;
     sf::Clock turnClock;
     sf::Clock globalClock;
 

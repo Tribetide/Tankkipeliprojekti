@@ -8,7 +8,7 @@
 #include <iostream>  // Debug-tulostukset
 
 
-Tank::Tank() : angle(45.0f), power(50.0f), hp(100), fuel(20) {
+Tank::Tank() : angle(45.0f), power(50.0f), hp(100), fuel(20), destroyed(false) {
     // Määritetään alkuperäinen sijainti (esimerkiksi X = 350, Y = 260)
     initialPosition = sf::Vector2f(350, 260);
 
@@ -375,13 +375,18 @@ void Tank::handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &p
 
 // -- Tuhoutuminen ja elämäpisteet
 
-void Tank::takeDamage(int damage){
+void Tank::takeDamage(int damage)
+{
     hp -= damage;
-    if (hp < 0) hp = 0;
+    if (hp <= 0) {
+        hp = 0;
 
-    // Tuhotaan tankki, jos HP on 0
-    if (hp == 0) {
-        destroyed = true;
+        // Tuhotaan tankki, jos HP on 0
+        if (!destroyed) {                 // jotta ääni soi vain kerran
+            destroyed = true;
+            SoundManager::getInstance()
+                .playSound("tank_destroyed", 100.f);   // 🔊
+        }
     }
 }
 

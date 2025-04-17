@@ -31,10 +31,6 @@ add_executable(Tankkipeli ${SOURCES})
 find_package(SFML 2.6 REQUIRED COMPONENTS graphics window system audio)
 target_link_libraries(Tankkipeli PRIVATE sfml-graphics sfml-window sfml-system sfml-audio)
 
-set(SOURCES
-    ...
-    src/Explosion.cpp  # lisää tämä rivi jos puuttuu
-)
 
 
 
