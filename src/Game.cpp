@@ -91,6 +91,18 @@ void Game::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
+            if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+                int result = Menu::showPauseMenu(window);
+                if (result == 1) {
+                    // Continue – ei tehdä mitään
+                } else if (result == 2) {
+                    resetGame();
+                } else if (result == 3) {
+                    window.close();
+                }
+            }
+            
+
         // 🔥 Estetään toiminnot, jos odotetaan vuoron vaihtoa
         if (waitingForTurnSwitch) 
             return;
@@ -294,6 +306,15 @@ void Game::render() {
     UI::drawTankHp(window, font, currentTank); 
     UI::drawFuelMeter(window, font, currentTank);
 
+    sf::Text scoreText;
+    scoreText.setFont(font);
+    scoreText.setCharacterSize(24);
+    scoreText.setFillColor(sf::Color::White);
+    scoreText.setPosition(20, 20);
+    scoreText.setString("T1 Wins: " + std::to_string(tank1Wins) +
+                        "   T2 Wins: " + std::to_string(tank2Wins));
+    window.draw(scoreText);
+    
 
     window.display();
 }
@@ -305,6 +326,17 @@ void Game::endGame() {
     winnerText.setCharacterSize(50);
     winnerText.setFillColor(sf::Color::Green);
 
+    if (tank1.getHp() == 0 && tank2.getHp() > 0) {
+        tank2Wins++;
+        winnerText.setString("Tank 2 wins!");
+    } else if (tank2.getHp() == 0 && tank1.getHp() > 0) {
+        tank1Wins++;
+        winnerText.setString("Tank 1 wins!");
+    } else {
+        draws++;
+        winnerText.setString("It's a draw!");
+    }
+    
 
     // Määritetään voittoteksti
     if (tank1.getHp() == 0) {
@@ -319,6 +351,13 @@ void Game::endGame() {
 
     window.clear();
     window.draw(winnerText);
+    sf::Text totalScore("T1: " + std::to_string(tank1Wins) + 
+                    " | T2: " + std::to_string(tank2Wins) +
+                    " | Draws: " + std::to_string(draws), font, 30);
+totalScore.setFillColor(sf::Color::White);
+totalScore.setPosition(200, 280);
+window.draw(totalScore);
+
     window.display();
 
     // Pidetään voittoteksti näkyvillä 3 sekuntia
