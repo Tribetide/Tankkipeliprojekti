@@ -82,6 +82,8 @@ void Game::run() {
         update();
         SoundManager::getInstance().update();
         render();
+        tank1.mouseControlEnabled = true;
+        tank2.mouseControlEnabled = true;
     }
 }
 
@@ -91,6 +93,7 @@ void Game::processEvents() {
         if (event.type == sf::Event::Closed)
             window.close();
 
+            // 🔥 Näppäimistön ESC-näppäimen käsittely
             if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
                 int result = Menu::showPauseMenu(window);
                 if (result == 1) {
@@ -107,25 +110,36 @@ void Game::processEvents() {
         if (waitingForTurnSwitch) 
             return;
 
-            // 🔥 Määritä aktiivinen tankki ja vastustaja
-            Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
-            const Tank &opponentTank = (eventManager.getCurrentTurn() == 0) ? tank2 : tank1;
+        // 🔥 Määritä aktiivinen tankki ja vastustaja
+        Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
+        const Tank &opponentTank = (eventManager.getCurrentTurn() == 0) ? tank2 : tank1;
 
-            if (event.type == sf::Event::KeyPressed) {
-                activeTank.handleInput(event.key.code, terrain, projectiles, waitingForTurnSwitch, turnClock, opponentTank);
-        }
-            // Hiiriohjaus päällä pitää painaa "m" :D
-            if (activeTank.mouseControlEnabled) {
-                activeTank.handleMouseInput(window, projectiles, waitingForTurnSwitch, turnClock);
+        // 🔥 Näppäimistön käsittely tankille
+        if (event.type == sf::Event::KeyPressed) {
+            activeTank.handleInput(event.key.code, terrain, projectiles, waitingForTurnSwitch, turnClock, opponentTank);
+    }
+        // Hiiriohjaus ohjaukseen ja tankin liikkumiseen:
+        if (event.type == sf::Event::MouseMoved) {
+            activeTank.handleMouseInput(window, projectiles, waitingForTurnSwitch, turnClock);
         }
 
-            if (event.type == sf::Event::MouseWheelScrolled) {
-                Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
-                if (activeTank.mouseControlEnabled) {
-                    float delta = event.mouseWheelScroll.delta;
-                    activeTank.adjustPower(delta * 5.0f); // Voiman säätö scrollilla
-                }
+        // Vasen hiirinappi = ampuminen
+        if (event.type == sf::Event::MouseButtonPressed &&
+            event.mouseButton.button == sf::Mouse::Left) 
+        {
+            // Luo ja laukaise uusi projektiili
+            projectiles.push_back(activeTank.shoot());
+            // Nollaa vuoroajastin ja aloitetaan odotus vuoron vaihtoon
+            turnClock.restart();
+            waitingForTurnSwitch = true;
         }
+
+        // 🔥 Hiiren rullakäyttö: säädetään voimaa
+        if (event.type == sf::Event::MouseWheelScrolled) {
+                float delta = event.mouseWheelScroll.delta;
+                activeTank.adjustPower(delta * 5.0f); // Voiman säätö scrollilla
+            }
+        
     }
 }
 
