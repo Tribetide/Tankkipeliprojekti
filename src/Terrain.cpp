@@ -71,17 +71,31 @@ namespace {
 
         std::vector<int> p;  // Permutaatio-taulukko
     };
+
+
+        // — Kerrosvärit —
+    const sf::Color GRASS_COLOR  ( 34,139, 34);  // vihreä
+    const sf::Color SOIL_COLOR   (139, 69, 19);  // ruskea
+    const sf::Color ROCK_COLOR   (128,128,128);  // harmaa
+
+    // — Kerrosten paksuudet pikseleinä —
+    constexpr int GRASS_THICK = 30;     // pinnalla   
+    constexpr int SOIL_THICK  = 250;    // ruohon alla  
+                                        // loput → kallio
+    
 }
+
 
 // =============================
 // Terrain-luokan toteutus
 // =============================
 Terrain::Terrain() {
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
 }
 
 // Alustetaan maasto Perlin noise -tekniikalla
 void Terrain::initialize() {
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
+    
     createSky(); // Kuu & tähdet pysyvät
 
     // Luodaan kuva aluksi tyhjänä (läpinäkyvä) koko ruudun kokoisena
@@ -91,13 +105,21 @@ void Terrain::initialize() {
     unsigned int seed = static_cast<unsigned>(std::time(nullptr));
     PerlinNoise perlin(seed);
 
-    // Parametrit, joita voit säätää
+    // Luodaan toinen PerlinNoise-olio maa värejä varten
+    PerlinNoise soilNoise(seed + 4242);   // maan siemen
+    PerlinNoise grassNoise(seed + 1337);  // ruohon siemen
+    PerlinNoise ditherNoise(seed + 9999); // dither noise
+    
+
+    // Parametrit, joilla voi muuttaa maaston ulkonäköä
     float scale       = 0.001f;   // x-skaala (mitä isompi, sitä "tiheämpi" maaston vaihtelu), 0.001..0.1
     int   octaves     = 3;       // montako oktaavia, mitä enemmän, sitä "sotkuisempi" maasto, 1..8
     float persistence = 0.4f;    // amplitudin pieneneminen per oktaavi, 0..1, 1 = ei pienenemistä
     int   baseLine    = 100;     // peruskorkeus, josta maasto lähtee, 0..1080, 0 on yläreuna, 1080 on alareuna
     int   maxVariation= 900;     // maksimikorkeus perlin-kukkuloille, 0..1080
-    
+
+    // Peruslinjan y-koordinaatti (missä maa alkaa)
+    std::vector<int> groundHeights(1920);
 
     // Käydään 1920 pikseliä x-suunnassa
     for (int x = 0; x < 1920; x++) {
@@ -122,16 +144,71 @@ void Terrain::initialize() {
         // Muodostetaan lopullinen y-koordinaatti
         int groundY = baseLine + static_cast<int>(normalized * maxVariation);
 
-        // Piirretään "maa" groundY:stä alaspäin vihreällä
-        for (int y = groundY; y < 1080; y++) {
-            terrainImage.setPixel(x, y, sf::Color::Green);
+        // Tallennetaan groundY taulukkoon
+        groundHeights[x] = groundY;
+
+    }
+
+        //  Piirretään pikselit
+        //   Käydään uudelleen x:ssä, poimitaan groundHeights[x],
+        //   lasketaan jyrkkyys (slope), ja maalataan y = groundY..1080
+    for (int x = 0; x < 1920; x++) {
+        int gY = groundHeights[x];
+        if (gY < 0)   gY = 0;
+        if (gY > 1080) gY = 1080;
+
+      
+         // Perlinen satunnainen vaihtelu ruoho‑kerroksen paksuuteen
+        double ng = grassNoise.noise(x * 0.003, 0.0);
+        int    localGrass = GRASS_THICK + static_cast<int>(ng * 50);
+        localGrass = std::clamp(localGrass, 25, 35);
+
+        // Perlinen satunnainen vaihtelu maa‑kerroksen paksuuteen
+        double ns = soilNoise.noise(x * 0.005, 0.0);      // −1…1
+        int    localSoil = SOIL_THICK + static_cast<int>(ns * 50);
+        localSoil = std::clamp(localSoil, 200, 250);      // raja‑arvot
+
+
+        // Lasketaan jyrkkyys verrattuna viereiseen x+1
+        int slope = 0;
+        if (x < 1919) {
+            slope = std::abs(groundHeights[x] - groundHeights[x+1]);
+        }
+
+        // Piirretään maata groundY:stä alaspäin
+        for (int y = gY; y < 1080; y++) {
+
+            // Syvyys maa‑pinnan ylärajasta
+            int depth = y - gY;
+
+            sf::Color baseCol;
+            if (depth < localGrass) {                // ruoho
+                baseCol = GRASS_COLOR;
+            } else if (depth < localGrass + localSoil) { // multa
+                baseCol = SOIL_COLOR;
+            } else {                                 // kallio
+                baseCol = ROCK_COLOR;
+            }
+
+            // — Tee pieni satunnaisdither ja rinteen tummentaminen —
+            //double dn = ditherNoise.noise(x * 0.005, y * 0.005); // taajuus 0.05…
+            //int dither = static_cast<int>(dn * 20.0 - 5.0); // 
+            int dither = ((x ^ y) & 3) - 15; //
+            int slopeDarken = slope;                        // jyrkkyys tummentaa
+
+            int r = std::clamp<int>(baseCol.r + dither - slopeDarken, 0, 255);
+            int g = std::clamp<int>(baseCol.g + dither - slopeDarken, 0, 255);
+            int b = std::clamp<int>(baseCol.b + dither - slopeDarken, 0, 255);
+
+            // Asetetaan pikseli
+            terrainImage.setPixel(x, y, sf::Color(r,g,b));
         }
     }
 
     // Päivitetään tekstuuri & sprite
     texture.loadFromImage(terrainImage);
     sprite.setTexture(texture);
-    sprite.setPosition(0, 0);
+    sprite.setPosition(0, 0);    // Asetetaan sprite alkuperäiseen paikkaan
 }
 
 void Terrain::update(float deltaTime) {
@@ -236,12 +313,12 @@ std::vector<PixelInfo> Terrain::destroy(sf::Vector2f position, int baseRadius) {
                 if (x >= 0 && x < (int)terrainImage.getSize().x &&
                     y >= 0 && y < (int)terrainImage.getSize().y) 
                 {
-// Lue pikselin väri ENNEN tyhjentämistä:
+                    // Lue pikselin väri ENNEN tyhjentämistä:
                     sf::Color oldColor = terrainImage.getPixel(x, y);
 
                     // Jos pikseli ei ole jo läpinäkyvä, tallenna info
                     if (oldColor.a != 0) {
-PixelInfo info;
+                        PixelInfo info;
                         info.coords = sf::Vector2i(x, y);
                         info.color  = oldColor;
                         destroyedPixelInfos.push_back(info);
@@ -257,5 +334,5 @@ PixelInfo info;
     texture.update(terrainImage);
 
     // Palautetaan tuhotut pikselit
-        return destroyedPixelInfos;
+    return destroyedPixelInfos;
 }
