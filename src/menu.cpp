@@ -26,16 +26,16 @@ namespace Menu {
         }
 
         // Tekstit
-        sf::Text title("Tankkipeli", font, 50);
-        title.setPosition(200, 100);
+        sf::Text title("Tankkipeli", font, 75);
+        title.setPosition(715, 250);
         title.setFillColor(sf::Color::White);
 
-        sf::Text start("1. Start (S)", font, 30);
-        start.setPosition(250, 200);
+        sf::Text start("1. Start (S)", font, 45);
+        start.setPosition(800, 400);
         start.setFillColor(sf::Color::Green);
 
-        sf::Text quit("2. Quit (Q)", font, 30);
-        quit.setPosition(250, 300);
+        sf::Text quit("2. Quit (Q)", font, 45);
+        quit.setPosition(800, 500);
         quit.setFillColor(sf::Color::Red);
 
         sf::FloatRect startBounds = start.getGlobalBounds();
@@ -90,15 +90,15 @@ namespace Menu {
 
         // Valikkotekstit
         sf::Text continueText("1. Continue (C)", font, 30);
-        continueText.setPosition(250, 200);
+        continueText.setPosition(800, 400);
         continueText.setFillColor(sf::Color::Green);
 
         sf::Text newGameText("2. New Game (N)", font, 30);
-        newGameText.setPosition(250, 300);
+        newGameText.setPosition(800, 500);
         newGameText.setFillColor(sf::Color::Cyan);
 
         sf::Text quitText("3. Quit (Q)", font, 30);
-        quitText.setPosition(250, 400);
+        quitText.setPosition(800, 600);
         quitText.setFillColor(sf::Color::Red);
 
         sf::FloatRect contBounds = continueText.getGlobalBounds();

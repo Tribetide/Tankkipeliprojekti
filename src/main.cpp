@@ -4,8 +4,11 @@
 #include "SoundManager.hpp"
 
 int main() {
-    // 1. Ikkuna
-    sf::RenderWindow window(sf::VideoMode(800, 600), "Tankkipeli");
+    // 1. Ikkuna 
+    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+
+    // Luodaan ikkuna koko näytölle
+    sf::RenderWindow window(desktop, "Tankkipeli", sf::Style::Fullscreen);
 
     // 2. Lataa äänitiedostot
     auto& soundMgr = SoundManager::getInstance();
@@ -31,11 +34,9 @@ int main() {
     int choice = Menu::showMenu(window);
     if (choice == 1) {
         // 5. Käynnistä peli
-        Game game;
+        Game game(window);
         game.run(); 
-        // Huom: Game::run()-silmukassa (tai muualla) tulee kutsua
-        // SoundManager::getInstance().update();
-        // jokaisella ruudunpäivityksellä.
+ 
     }
 
     return 0;

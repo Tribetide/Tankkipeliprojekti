@@ -31,8 +31,8 @@ bool isTankInExplosionArea(const Tank &tank, const std::vector<Explosion> &explo
     return false;
 }
 
-Game::Game()
-    : window(sf::VideoMode(1920, 1080), "Tankkipeli"),
+Game::Game(sf::RenderWindow& win)
+    : window(win),
     gravity(Config::GRAVITY),
     windForce(Config::getRandomWind()),
     eventManager(tank1, tank2, *this),
@@ -379,11 +379,11 @@ window.draw(totalScore);
 
     // Siirrytään vaihtoehtoihin
     sf::Text retryText("1. Retry", font, 30);
-    retryText.setPosition(250, 200);
+    retryText.setPosition(800, 500);
     retryText.setFillColor(sf::Color::Green);
 
     sf::Text quitText("2. Quit", font, 30);
-    quitText.setPosition(250, 300);
+    quitText.setPosition(800, 500);
     quitText.setFillColor(sf::Color::Yellow);
 
 

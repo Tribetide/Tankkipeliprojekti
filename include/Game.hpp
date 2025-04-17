@@ -15,6 +15,7 @@ class EventManager;
 class Game {
 public:
     Game();
+    explicit Game(sf::RenderWindow& win);
     void run();                         // Käynnistää pelin pääsilmukan
     void endGame();                     // Päättää pelin ja näyttää tulokset
     void resetGame();                   // Nollaa peli uutta peliä varten
@@ -27,7 +28,7 @@ private:
     void drawWindIndicator();           // Tuulen graafinen esitys (jos käytössä)
 
     // Ikkuna ja visuaalinen tila
-    sf::RenderWindow window;
+    sf::RenderWindow& window;
     sf::Texture moonTexture;
     sf::Sprite moonSprite;
     sf::Font font;
