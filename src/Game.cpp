@@ -116,8 +116,19 @@ void Game::processEvents() {
 
         // 🔥 Näppäimistön käsittely tankille
         if (event.type == sf::Event::KeyPressed) {
+        // K-painallus tuhoaa tankin ja lopettaa pelin heti
+        if (event.key.code == sf::Keyboard::K) {
+                activeTank.takeDamage(activeTank.getHp());
+                explosions.emplace_back(activeTank.getPosition());
+                // Estä pelilogiikka, ja määrittele lopetustauko
+                pendingEndGame = true;
+                endGameClock.restart();
+                return;
+            }
+        // 🔥 Muut näppäimet käsitellään normaalisti
             activeTank.handleInput(event.key.code, terrain, projectiles, waitingForTurnSwitch, turnClock, opponentTank);
-    }
+        }
+        
         // Hiiriohjaus ohjaukseen ja tankin liikkumiseen:
         if (event.type == sf::Event::MouseMoved) {
             activeTank.handleMouseInput(window, projectiles, waitingForTurnSwitch, turnClock);
@@ -145,6 +156,24 @@ void Game::processEvents() {
 
 void Game::update() {
     float deltaTime = 0.9f / 60.0f;
+
+    //  Jos odotetaan lopetustaukoa, päivitä vain räjähdykset ja tarkista kello
+    if (pendingEndGame) {
+            // Päivitä räjähdyseffektit
+            for (auto &e : explosions) e.update(deltaTime);
+            // Poista valmiit räjähdykset (jos haluat)
+            explosions.erase(
+                std::remove_if(explosions.begin(), explosions.end(),
+                               [](const Explosion &e){ return e.isFinished(); }),
+                explosions.end());
+    
+            // Kun tauko on kulunut, lopeta peli
+            if (endGameClock.getElapsedTime().asSeconds() >= 1.0f) {
+                pendingEndGame = false;
+                endGame();
+            }
+            return;  // älä suorita muuta logiikkaa
+        }
 
     // 🔥 Päivitä räjähdykset ensin
     for (auto &e : explosions) {

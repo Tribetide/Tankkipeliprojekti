@@ -328,9 +328,6 @@ void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain,
     else if (key == sf::Keyboard::M) {
         toggleControlMode();
     }
-    else if (key == sf::Keyboard::K) {
-        Tank::takeDamage(Tank::getHp());
-    }
 }
 
 void Tank::handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &projectiles,

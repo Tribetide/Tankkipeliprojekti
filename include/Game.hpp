@@ -49,8 +49,10 @@ private:
     bool waitingForTurnSwitch = false;
     bool tank1DestroyedFxDone = false;
     bool tank2DestroyedFxDone = false;
+    bool pendingEndGame = false;
     sf::Clock turnClock;
     sf::Clock globalClock;
+    sf::Clock endGameClock;
 
     // Tankkien aloitussijainnit
     sf::Vector2f tank1StartPosition;
