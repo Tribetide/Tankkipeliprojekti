@@ -328,6 +328,9 @@ void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain,
     else if (key == sf::Keyboard::M) {
         toggleControlMode();
     }
+    else if (key == sf::Keyboard::K) {
+        Tank::takeDamage(Tank::getHp());
+    }
 }
 
 void Tank::handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &projectiles,
@@ -434,7 +437,7 @@ void Tank::reset(Terrain &terrain, const sf::Vector2f& startPosition) {
     // Palautetaan tankki annettuun sijaintiin ja asetetaan kaikki parametrit nollaksi
     placeOnTerrain(terrain, startPosition.x); // Käytetään annettua paikkaa
     power = 50.0f;  
-    angle = 45.0f;
+//    angle = 45.0f;
     hp = 100;  
     destroyed = false; 
     fuel = 20; // Nollataan polttoaine
