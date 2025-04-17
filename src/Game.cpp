@@ -324,7 +324,7 @@ void Game::render() {
     scoreText.setFont(font);
     scoreText.setCharacterSize(24);
     scoreText.setFillColor(sf::Color::White);
-    scoreText.setPosition(20, 20);
+    scoreText.setPosition(800, 20);
     scoreText.setString("T1 Wins: " + std::to_string(tank1Wins) +
                         "   T2 Wins: " + std::to_string(tank2Wins));
     window.draw(scoreText);
