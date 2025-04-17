@@ -33,7 +33,10 @@ namespace Config {
 
     // Ammuksen nopeus ja lisänopeus
     static const float BASE_PROJECTILE_SPEED = 150.0f; 
-    static const float MAX_EXTRA_PROJECTILE_SPEED = 300.0f; 
+    static const float MAX_EXTRA_PROJECTILE_SPEED = 225.0f; 
+
+    // Tähtäimen koko
+    static const float CROSSHAIR_SIZE = 20.f; // Tähtäimen koko
 }
 
 #endif

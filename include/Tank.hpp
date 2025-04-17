@@ -31,9 +31,6 @@ public:
     void toggleControlMode(); // Vaihtaa ohjaustilaa
     float mouseDragStartY = -1.f;
 
-                    
-
-
     // 🔥 Tuhoutuminen ja elämäpisteet
     void takeDamage(int damage);
     void heal(int amount);
@@ -57,6 +54,9 @@ public:
     // 🔥 Reset (aloitustilanteeseen)
     void reset(Terrain& terrain, const sf::Vector2f& startPosition);
     void resetFuel();
+
+    // Tähtäin
+    sf::Vector2f getAimPoint(float length = 500.f) const;
 
 
 private:   

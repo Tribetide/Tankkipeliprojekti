@@ -17,6 +17,8 @@ public:
     static void drawTankHp(sf::RenderWindow &window, sf::Font &font, const Tank &tank);
     static void drawFuelMeter(sf::RenderWindow &window, sf::Font &font, const Tank &tank);
     static void drawWindBarIndicator(sf::RenderWindow &window, float windForce);
+    static void drawCrosshair(sf::RenderWindow &window, const sf::Vector2f &pos);
+
 
 };
 

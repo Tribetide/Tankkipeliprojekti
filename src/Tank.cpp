@@ -58,7 +58,14 @@ void Tank::draw(sf::RenderWindow &window) {
     window.draw(turret);     // Piirrä tykki lopuksi
 }
 
-
+sf::Vector2f Tank::getAimPoint(float length) const {
+    // Sama kulmalasku kuin shoot()‑metodissa
+    float rad = (angle - 90.f) * 3.14159265f / 180.f;
+    return {
+        turret.getPosition().x + std::cos(rad) * length,
+        turret.getPosition().y + std::sin(rad) * length
+    };
+}
 
 
 //////  TÄÄLTÄ SÄÄDETÄÄN TANKIN OSIEN SIJAINTIA KUN LIIKUTAAN

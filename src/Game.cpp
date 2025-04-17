@@ -274,6 +274,16 @@ void Game::render() {
     // Hae vuorossa oleva tankki
     Tank &currentTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
 
+    if (!waitingForTurnSwitch) {
+        sf::Vector2f aimPos = currentTank.getAimPoint(); // 500 px
+        UI::drawCrosshair(window, aimPos);
+    }
+
+    // ristiä ei  näy ammuksen lentäessä
+    if (!waitingForTurnSwitch && !eventManager.anyProjectilesAlive(projectiles)) {
+        UI::drawCrosshair(window, currentTank.getAimPoint());
+    }
+
     // Kutsutaan UI-piirtämisen funktioita
     UI::drawTurnText(window, font, eventManager);
     UI::drawTurnTimer(window, font, eventManager);    

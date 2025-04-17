@@ -191,3 +191,25 @@ void UI::drawFuelMeter(sf::RenderWindow &window, sf::Font &font, const Tank &tan
     fuelDisplay.setPosition(tank.getPosition().x - 5, tank.getPosition().y - 90);
     window.draw(fuelDisplay);
 }
+
+void UI::drawCrosshair(sf::RenderWindow &window,
+        const sf::Vector2f &pos)
+    {
+    
+    float size = Config::CROSSHAIR_SIZE;
+
+    // Vaaka‑ ja pystypalkit
+    sf::RectangleShape h(sf::Vector2f(size, 2));
+    sf::RectangleShape v(sf::Vector2f(2, size));
+    h.setOrigin(size / 2, 1);
+    v.setOrigin(1, size / 2);
+
+    h.setPosition(pos);
+    v.setPosition(pos);
+
+    h.setFillColor(sf::Color::Red);
+    v.setFillColor(sf::Color::Red);
+
+    window.draw(h);
+    window.draw(v);
+}
