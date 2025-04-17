@@ -4,7 +4,11 @@
 #include <SFML/Graphics.hpp>
 
 namespace Menu {
-    int showMenu(sf::RenderWindow &window); // Palauttaa valinnan
+    // Alkuvalikko, jossa esim. Start / Quit
+    int showMenu(sf::RenderWindow &window);
+
+    // Pelin sisäinen pause-valikko: Continue / New Game / Quit
+    int showPauseMenu(sf::RenderWindow &window);
 }
 
 #endif
