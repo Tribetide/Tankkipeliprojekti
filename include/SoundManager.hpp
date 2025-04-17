@@ -7,10 +7,7 @@
 #include <memory>
 #include <vector>
 
-/* ------------------------------------------------------------------
- *  S O U N D M A N A G E R
- *  – header‑only : kaikki määritelmät tässä tiedostossa
- * ------------------------------------------------------------------*/
+
 class SoundManager {
 public:
     /* -------- Singleton -------- */
