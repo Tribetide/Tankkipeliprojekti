@@ -6,85 +6,87 @@
 #include <string>
 #include <memory>
 #include <vector>
-#include <algorithm>
-#include <stdexcept>
 
+/* ------------------------------------------------------------------
+ *  S O U N D M A N A G E R
+ *  – header‑only : kaikki määritelmät tässä tiedostossa
+ * ------------------------------------------------------------------*/
 class SoundManager {
 public:
-    // Singleton: SoundManager::getInstance()
+    /* -------- Singleton -------- */
     static SoundManager& getInstance() {
-        static SoundManager instance;
+        static SoundManager instance;      // ← kutsuu yksityisen ctorin
         return instance;
     }
 
-    // 1. Lataa äänibuffer (lyhyt efekti)
-    bool loadSound(const std::string& key, const std::string& filename) {
+    /* -------- Bufferien ja musiikin lataus -------- */
+    bool loadSound(const std::string& key, const std::string& filename)
+    {
         sf::SoundBuffer buffer;
-        if (!buffer.loadFromFile(filename)) {
-            return false;
-        }
+        if (!buffer.loadFromFile(filename)) return false;
         soundBuffers[key] = buffer;
         return true;
     }
 
-    // 2. Soita lyhyt ääniefekti halutulla äänenvoimakkuudella (0..100)
-    void playSound(const std::string& key, float volume = 100.f) {
-        auto it = soundBuffers.find(key);
-        if (it == soundBuffers.end()) {
-            throw std::runtime_error("Sound buffer not found: " + key);
-        }
-        // Lisätään uusi sf::Sound vectoriin
-        sounds.emplace_back();
-        sf::Sound& sound = sounds.back();
-        sound.setBuffer(it->second);
-        sound.setVolume(volume);
-        sound.play();
-    }
-
-    // 3. Lataa streamattava musiikki (esim. War.ogg)
-    bool loadMusic(const std::string& key, const std::string& filename) {
+    bool loadMusic(const std::string& key, const std::string& filename)
+    {
         auto music = std::make_unique<sf::Music>();
-        if (!music->openFromFile(filename)) {
-            return false;
-        }
+        if (!music->openFromFile(filename)) return false;
         musics[key] = std::move(music);
         return true;
     }
 
-    // 4. Hae sf::Music* (voidaan asettaa loop, volume, play, stop, tms.)
-    sf::Music* getMusic(const std::string& key) {
+    sf::Music* getMusic(const std::string& key)
+    {
         auto it = musics.find(key);
-        if (it == musics.end()) {
-            throw std::runtime_error("Music not found: " + key);
-        }
-        return it->second.get();
+        return (it == musics.end()) ? nullptr : it->second.get();
     }
 
-    // 5. Kutsutaan pelisilmukan jokaisella kierroksella:
-    //    SoundManager siivoaa pysähtyneet äänet pois (etteivät jää vektoriin).
-    void update() {
+    /* -------- Ääniefektin soittaminen -------- */
+    void playSound(const std::string& key, float volume = 100.f)
+    {
+        auto it = soundBuffers.find(key);
+        if (it == soundBuffers.end()) return;           // buffereita ei löytynyt
+
+        /* 1) käytä pysähtynyttä kanavaa uudelleen */
+        for (auto& s : sounds) {
+            if (s.getStatus() == sf::Sound::Stopped) {
+                s.setBuffer(it->second);
+                s.setVolume(volume);
+                s.play();
+                return;
+            }
+        }
+
+        /* 2) kaikki kanavat varattuja → luodaan uusi  */
+        sounds.emplace_back();                          // kapasiteetti jo varattu
+        sf::Sound& s = sounds.back();
+        s.setBuffer(it->second);
+        s.setVolume(volume);
+        s.play();
+    }
+
+    /* -------- Päivitys pelisilmukassa -------- */
+    void update()
+    {
         sounds.erase(
             std::remove_if(sounds.begin(), sounds.end(),
                            [](const sf::Sound& s){
                                return s.getStatus() == sf::Sound::Stopped;
                            }),
-            sounds.end()
-        );
+            sounds.end());
     }
 
 private:
-    SoundManager() = default;
-    SoundManager(const SoundManager&) = delete;
+    /* -------- Yksityinen ctor -------- */
+    SoundManager() { sounds.reserve(64); }              // varataan kanavat
+    SoundManager(const SoundManager&)            = delete;
     SoundManager& operator=(const SoundManager&) = delete;
 
-    // Äänipuskurit lyhyille efekteille (ampuminen, räjähdys jne.)
+    /* -------- Data -------- */
+    std::vector<sf::Sound> sounds;                      // kierrätettävät kanavat
     std::map<std::string, sf::SoundBuffer> soundBuffers;
-
-    // Taustamusiikit (sf::Music ei ole kopioitava → säilytetään unique_ptr)
     std::map<std::string, std::unique_ptr<sf::Music>> musics;
-
-    // Soivat sf::Sound-oliot. Välttämätön, jottei ääni katkea funktiosta poistuttaessa.
-    std::vector<sf::Sound> sounds;
 };
 
 #endif // SOUNDMANAGER_HPP
