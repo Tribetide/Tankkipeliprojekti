@@ -42,14 +42,11 @@ public:
     float fallStartY = -1.f;
     bool isFalling = false;
 
-
     // 🔥 Getterit
     float getAngle() const;
     float getPower() const;
     sf::Vector2f getPosition() const;
     sf::FloatRect getBounds() const ; // Törmäyslaatikko
-
-//    void update();                                            turha :D
 
     // 🔥 Reset (aloitustilanteeseen)
     void reset(Terrain& terrain, const sf::Vector2f& startPosition);

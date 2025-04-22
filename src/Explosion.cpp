@@ -9,7 +9,6 @@ Explosion::Explosion(sf::Vector2f position)
     shape.setOrigin(10.f, 10.f);
     shape.setFillColor(sf::Color::Red); // Kirkkaampi
     shape.setPosition(position);
-    std::cout << "Räjähdys luotu kohtaan: " << position.x << ", " << position.y << std::endl;
 }
 
 void Explosion::update(float deltaTime) {
