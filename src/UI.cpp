@@ -4,6 +4,11 @@
 #include "Game.hpp"  // Tarvitaan Game-luokan määrittely
 #include <Config.hpp>
 
+// Tuulipalkin sijainti ja koko
+namespace {
+    const sf::Vector2f WIND_BAR_POS(80.f, 70.f);
+    const sf::Vector2f WIND_BAR_SIZE(180.f, 20.f);
+}
 
 // Piirretään kulmateksti
 void UI::drawAngleText(sf::RenderWindow &window, sf::Font &font, const Tank &currentTank) {
@@ -19,82 +24,73 @@ void UI::drawPowerText(sf::RenderWindow &window, sf::Font &font, const Tank &cur
     window.draw(powerText);
 }
 
+
 // 🔥 Pyöristetään tuulen arvo kokonaisluvuksi
-void UI::drawWindText(sf::RenderWindow &window, sf::Font &font, float windForce) {
-    int windValue = static_cast<int>(windForce);
+void UI::drawWindText(sf::RenderWindow &window, sf::Font &font, float ) {
+    {
+        sf::Text lbl("Tuuli: ", font, 20);
+        lbl.setFillColor(sf::Color::White);
     
-    // 🔥 Näytetään kokonaislukuna ruudulla
-    sf::Text windText("Tuuli: " + std::to_string(windValue), font, 20);
-    windText.setPosition(10, 70);
-    window.draw(windText);
+        // n. 60 px vasemmalle itse palkista
+        lbl.setPosition(WIND_BAR_POS.x - 70.f,
+                        WIND_BAR_POS.y - 2.f);
+    
+        window.draw(lbl);
+    }
 }
 
-// 🔥 Piirretään tuuli-indikaattori palkki
+/* ==================================
+🔥  Tuuli-indikaattori palkki
+=================================== */
 void UI::drawWindBarIndicator(sf::RenderWindow& window, float windForce) 
 {
-    // 1) Määritellään palkin koko ja sijainti ruudulla
-    sf::Vector2f barPos(70.f, 120.f);   // Piirretään esim. (70,120)
-    sf::Vector2f barSize(200.f, 20.f);  // 200 leveys, 20 korkeus
 
-    // 2) Piirretään harmaa taustapalkki
-    sf::RectangleShape barBackground(barSize);
-    barBackground.setFillColor(sf::Color(60,60,60)); // harmaa
-    barBackground.setPosition(barPos);
-    window.draw(barBackground);
+    // Piirretään harmaa taustapalkki ja määritetään sen koko sekä sijainti
+    sf::RectangleShape bg(WIND_BAR_SIZE);
+    bg.setFillColor(sf::Color(60, 60, 60)); // harmaa
+    bg.setPosition(WIND_BAR_POS);
+    window.draw(bg);
 
-    // 3) Lasketaan, miten iso osa palkista “täytetään”.
-    //    Oletus: max tuuli on ±10 (Config::WIND_MIN..WIND_MAX).
+  
     float maxWind   = static_cast<float>(std::max(std::abs((float)Config::WIND_MIN),
                                                   std::abs((float)Config::WIND_MAX)));
     float ratio     = std::abs(windForce) / maxWind; // 0..1
     ratio           = std::fmin(ratio, 1.f);         // clamp
 
-    // 4) Piirretään värillinen osa
-    //    - Jos windForce > 0, täytetään palkin oikea puoli [keski -> oikea].
-    //    - Jos windForce < 0, täytetään palkin vasen puoli [keski -> vasen].
-    //    - Jos windForce == 0, ei täyttöä (tai hyvin pieni).
-    float halfWidth = barSize.x / 2.f; 
+   
+    float halfWidth = WIND_BAR_SIZE.x / 2.f; 
     float fillWidth = ratio * halfWidth; // Kuinka monta pikseliä täytetään
     
-    // Keksitään vaikka, että kova tuuli = punainen, heikko tuuli = sininen
-    // (tai vihreä). Alla pieni esimerkki gradientista punainen<->sininen.
-    // Voit säätää makusi mukaan.
-    // ratio=1 => punainen, ratio=0 => sininen.
+
     sf::Uint8 r = static_cast<sf::Uint8>(255 * ratio);
     sf::Uint8 b = static_cast<sf::Uint8>(255 * (1.f - ratio));
     sf::Color fillColor(r, 0, b);  // punasiniskaala
 
     sf::RectangleShape barFill;
     barFill.setFillColor(fillColor);
-    barFill.setSize(sf::Vector2f(fillWidth, barSize.y));
+    barFill.setSize(sf::Vector2f(fillWidth, WIND_BAR_SIZE.y));
 
     // Palkin keskipiste (x)
-    float centerX = barPos.x + halfWidth;
+    float centerX = WIND_BAR_POS.x + halfWidth;
 
     if (windForce > 0) {
         // Täytetään oikealle päin
-        barFill.setPosition(centerX, barPos.y);
+        barFill.setPosition(centerX, WIND_BAR_POS.y);
     }
     else if (windForce < 0) {
         // Täytetään vasemmalle, mutta fillRect haluaa positiivisen leveysarvon
         // Siispä sijoitetaan x = centerX - fillWidth
-        barFill.setPosition(centerX - fillWidth, barPos.y);
+        barFill.setPosition(centerX - fillWidth, WIND_BAR_POS.y);
     }
     else {
-        // windForce == 0
-        // Ei täyttöä, tai pieni "nolla"
-        barFill.setSize(sf::Vector2f(2.f, barSize.y)); 
-        barFill.setPosition(centerX - 1, barPos.y);
+        barFill.setSize(sf::Vector2f(2.f, WIND_BAR_SIZE.y)); 
+        barFill.setPosition(centerX - 1, WIND_BAR_POS.y);
         barFill.setFillColor(sf::Color::White);
     }
 
     window.draw(barFill);
 
-    // 5) Piirretään nuolet. Toteutetaan toistona.
-    //    Pienet kolmiot sisäkkäin, esim. 10 px välein. 
-    //    Jos windForce>0 => nuolet osoittavat oikealle, <0 => vasemmalle.
-    
-    // Montako nuolta? Sovitaan 1..5, esim. tuuliratio * 5
+    // Nuolten piirtäminen
     int arrowCount = static_cast<int>(std::round(ratio * 5.f));
     if (arrowCount < 1 && windForce != 0) arrowCount = 1; 
     // Asetetaan suunta
@@ -111,11 +107,7 @@ void UI::drawWindBarIndicator(sf::RenderWindow& window, float windForce)
 
     // Käydään arrowCount verran
     for (int i = 0; i < arrowCount; i++) {
-        // Piirretään nuoli pieneen offsetiin
-        // Sovitaan, että piirrämme nuolet tasavälein fillWidth-alueelle,
-        // esim. pituus / (arrowCount+1).
         float spacing = fillWidth / (arrowCount + 1);
-        // Indeksistä i+1 => etäisyys vasenta/tai oikeaa reunaa pitkin
         float dist = spacing * (i+1);
 
         float arrowX;
@@ -131,7 +123,7 @@ void UI::drawWindBarIndicator(sf::RenderWindow& window, float windForce)
             break;
         }
 
-        arrowShape.setPosition(arrowX, barPos.y + (barSize.y/2.f)); 
+        arrowShape.setPosition(arrowX, WIND_BAR_POS.y + (WIND_BAR_SIZE.y/2.f)); 
         arrowShape.setRotation(arrowDirection);
 
         window.draw(arrowShape);
@@ -141,7 +133,7 @@ void UI::drawWindBarIndicator(sf::RenderWindow& window, float windForce)
 
 // Piirretään vuoroteksti
 void UI::drawTurnText(sf::RenderWindow &window, sf::Font &font, const EventManager &eventManager) {
-    sf::Text turnText("Vuoro: " + std::string((eventManager.getCurrentTurn() == 0) ? "Pelaaja 1" : "Pelaaja 2"), font, 20);
+    sf::Text turnText("Vuoro: " + std::string((eventManager.getCurrentTurn() == 0) ? "Tank 1" : "Tank 2"), font, 20);
     turnText.setPosition(150, 10);
     window.draw(turnText);
 }
@@ -156,7 +148,7 @@ void UI::drawTurnTimer(sf::RenderWindow &window, sf::Font &font, const EventMana
 // Piirretään tankin hp
 void UI::drawTankHp(sf::RenderWindow &window, sf::Font &font, const Tank &tank) {
     sf::Text hpText(std::to_string(tank.getHp()), font, 20);
-    hpText.setPosition(tank.getPosition().x - 20, tank.getPosition().y - 50);
+    hpText.setPosition(tank.getPosition().x - 20, tank.getPosition().y - 45);
     hpText.setFillColor(sf::Color::White); // Väriksi valkoinen
     window.draw(hpText);
 }
@@ -169,11 +161,11 @@ void UI::drawFuelMeter(sf::RenderWindow &window, sf::Font &font, const Tank &tan
 
     sf::RectangleShape fuelBarBackground(sf::Vector2f(40, 5)); // Tausta
     fuelBarBackground.setFillColor(sf::Color(50, 50, 50)); // Harmaa tausta
-    fuelBarBackground.setPosition(tank.getPosition().x - 20, tank.getPosition().y - 70);
+    fuelBarBackground.setPosition(tank.getPosition().x - 20, tank.getPosition().y - 80);
 
     sf::RectangleShape fuelBar(sf::Vector2f(40 * fuelRatio, 5)); // Itse polttoainepalkki
     fuelBar.setFillColor(sf::Color::Green); // Vihreä palkki
-    fuelBar.setPosition(tank.getPosition().x - 20, tank.getPosition().y - 70);
+    fuelBar.setPosition(tank.getPosition().x - 20, tank.getPosition().y - 80);
 
     window.draw(fuelBarBackground);
     window.draw(fuelBar);
@@ -188,10 +180,13 @@ void UI::drawFuelMeter(sf::RenderWindow &window, sf::Font &font, const Tank &tan
 
     sf::Text fuelDisplay(fuelText, font, 14);
     fuelDisplay.setFillColor(sf::Color::White);
-    fuelDisplay.setPosition(tank.getPosition().x - 5, tank.getPosition().y - 90);
+    fuelDisplay.setPosition(tank.getPosition().x - 5, tank.getPosition().y - 95);
     window.draw(fuelDisplay);
 }
 
+/* --------------------------
+Piirretään tähtäin
+------------------------- */
 void UI::drawCrosshair(sf::RenderWindow &window,
         const sf::Vector2f &pos)
     {
@@ -213,3 +208,37 @@ void UI::drawCrosshair(sf::RenderWindow &window,
     window.draw(h);
     window.draw(v);
 }
+
+/* -----------------------------------------------
+  Vuoroteksti tankin yläpuolelle
+ --------------------------------------------- */
+ void UI::drawTurnLabelOverTank(sf::RenderWindow& window,
+        sf::Font&         font,
+        const EventManager& ev,
+        const Tank&        t1,
+        const Tank&        t2)
+    {
+    const Tank& active = (ev.getCurrentTurn() == 0) ? t1 : t2;
+    if (active.isDestroyed()) return;
+
+    // — Värit —
+    const sf::Color T1_COL{  30, 140, 255 };   // sininen
+    const sf::Color T2_COL{ 255,  80,  80 };   // punainen
+    sf::Color labelColor = (ev.getCurrentTurn() == 0) ? T1_COL : T2_COL;
+
+    // Teksti
+    std::string label = (ev.getCurrentTurn() == 0) ? "Tank 1" : "Tank 2";
+    sf::Text txt(label, font, 20);
+    txt.setFillColor(labelColor);        // Väri
+    txt.setOutlineColor(sf::Color::Black); // Musta ääriviiva
+
+    // Sijoitus (kuten aiemmin)
+    sf::Vector2f pos = active.getPosition();
+    float hpX = pos.x - 20.f;
+    float hpY = pos.y - 50.f;
+    txt.setPosition(hpX + 20.f - txt.getLocalBounds().width * 0.5f,
+    hpY - 20.f);
+
+    window.draw(txt);
+    }
+

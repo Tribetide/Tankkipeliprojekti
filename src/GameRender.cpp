@@ -55,7 +55,8 @@ void Game::render() {
 
     // Kutsutaan UI-piirtämisen funktioita
     UI::drawTurnText(window, font, eventManager);
-    UI::drawTurnTimer(window, font, eventManager);    
+    UI::drawTurnTimer(window, font, eventManager);   
+    UI::drawTurnLabelOverTank(window, font, eventManager, tank1, tank2);
     UI::drawAngleText(window, font, currentTank);
     UI::drawPowerText(window, font, currentTank);
     UI::drawWindText(window, font, windForce);
@@ -71,8 +72,8 @@ void Game::render() {
     scoreText.setCharacterSize(24);
     scoreText.setFillColor(sf::Color::White);
     scoreText.setPosition(800, 20);
-    scoreText.setString("T1 Wins: " + std::to_string(tank1Wins) +
-                        "   T2 Wins: " + std::to_string(tank2Wins));
+    scoreText.setString("Tank 1 Wins: " + std::to_string(tank1Wins) +
+                        "   Tank 2 Wins: " + std::to_string(tank2Wins));
     window.draw(scoreText);
     
 
@@ -111,8 +112,8 @@ void Game::endGame() {
 
     window.clear();
     window.draw(winnerText);
-    sf::Text totalScore("T1: " + std::to_string(tank1Wins) + 
-                    " | T2: " + std::to_string(tank2Wins) +
+    sf::Text totalScore("Tank 1: " + std::to_string(tank1Wins) + 
+                    " | Tank 2: " + std::to_string(tank2Wins) +
                     " | Draws: " + std::to_string(draws), font, 30);
     totalScore.setFillColor(sf::Color::White);
     totalScore.setPosition(200, 280);
