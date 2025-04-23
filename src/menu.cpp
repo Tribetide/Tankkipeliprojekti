@@ -20,7 +20,7 @@ namespace Menu {
         );
 
         // Fontti
-        if (!font.loadFromFile("../assets/fonts/SHOWG.TTF")) {
+        if (!font.loadFromFile("assets/fonts/SHOWG.TTF")) {
             std::cerr << "Fontin lataus epäonnistui!\n";
             return 2;
         }
@@ -84,7 +84,7 @@ namespace Menu {
     // 🔷 Pause-valikko pelin sisällä
     int showPauseMenu(sf::RenderWindow &window) {
         sf::Font font;
-        if (!font.loadFromFile("../assets/fonts/SHOWG.TTF")) {
+        if (!font.loadFromFile("assets/fonts/SHOWG.TTF")) {
             return 3;
         }
 

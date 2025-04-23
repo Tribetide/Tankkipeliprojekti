@@ -1,141 +1,144 @@
-# 🚀 Tankkipeli
+# 🚀 Tankkipeli – 2D‑tykistöpeli (C++17 + SFML 2.6)
 
-Tämä on **Scorched Tanks** -tyylinen 2D-tankkipeli, joka on toteutettu **C++:lla, SFML:llä ja CMake:lla**.  
-Peli sisältää **rikkoutuvan maaston, ammuksen fysiikan (painovoima & tuuli) sekä vuoropohjaisen pelimekaniikan**.
+Tämä projekti on **Scorched Tanks** ‑henkinen kahden pelaajan 2D‑peli, jossa tuhoat vastustajan tankin rikkomalla maastoa ja hallitsemalla tuulta.  Lähdekoodi on C++17:ää, grafiikka hoituu **SFML 2.6**:lla ja koko homma rakennetaan **CMake**lla.
 
-🎯 **Tavoitteena** on ampua vastustajan tankki pois kentältä, samalla halliten tuulen ja ammuksen lentorataa!
-
----
-
-## 🔹 Riippuvuudet
-
-Ennen kuin voit kääntää ja ajaa pelin, varmista että sinulla on seuraavat asennettuna:
-
-- **C++-kääntäjä** (MSVC, GCC tai Clang)
-- **CMake** (vähintään 3.15)
-- **SFML 2.6** (asennetaan joko vcpkg:llä tai käsin)
-
-Jos käytät **vcpkg:tä**, voit asentaa SFML:n näin:
-```sh
-vcpkg install sfml
-```
-Jos **et käytä vcpkg:tä**, lataa SFML osoitteesta:  
-📝 [https://www.sfml-dev.org/download.php](https://www.sfml-dev.org/download.php)
+> **Pika‑start**: Lataa uusin **Tankkipeli--win64.zip** → pura → tuplaklikkaa **Tankkipeli.exe** – ei asennusta!
 
 ---
 
-## 🔹 Asennus ja kääntäminen
+## 🔑 Ominaisuudet
 
-Tämä projekti tukee **sekä MinGW (GCC) että MSVC (Visual Studio)** -ympäristöjä.
-
-### **🟢 Windows (Visual Studio 2022)**
-1️⃣ Avaa **PowerShell / Git Bash** ja siirry projektin kansioon:
-```sh
-cd C:\Users\HP\OneDrive\Asiakirjat\GitHub\Tankkipeli
-```
-2️⃣ Poista vanhat build-tiedostot:
-```sh
-rm -rf build
-```
-3️⃣ Luo uusi build-kansio ja konfiguroi CMake:
-```sh
-cmake -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake ..
-```
-4️⃣ Rakenna projekti:
-```sh
-cmake --build .
-```
-5️⃣ Aja peli:
-```sh
-./Tankkipeli.exe
-```
+| ✔  | Ominaisuus                                               |
+| -- | -------------------------------------------------------- |
+| ✅  | Perlin‑noise‑pohjainen, hajotettava maasto (pikselitaso) |
+| ✅  | Ballistinen fysiikka: painovoima, satunnainen tuuli      |
+| ✅  | 30 s vuororajoitus, räjähdykset & partikkelit            |
+| ✅  | Ääniefektit + taustamusiikki (SFML Audio)                |
+| 🟡 | Useita aseita (WIP)                                      |
+|    |                                                          |
 
 ---
 
-### **🟢 Windows (MinGW / GCC)**
-1️⃣ Poista vanha build-kansio:
-```sh
-rm -rf build
+## 📂 Kansiot ja tiedostot
+
 ```
-2️⃣ Konfiguroi CMake käyttämään MinGW:tä:
-```sh
-cmake -G "MinGW Makefiles" ..
+├── assets/         # kuvat, fontit, äänet
+├── docs/           # suomi‑ohjeet (käyttö, suunnittelu)
+├── include/        # .hpp‑otsikot
+├── src/            # .cpp‑lähdekoodi
+├── build_release.bat  # Windowsin julkaisuskripti
+├── CMakeLists.txt
+└── vcpkg.json      # riippuvuuksien lukitus
 ```
-3️⃣ Rakenna peli:
-```sh
-mingw32-make
+
+### Lähdekoodit 
+
 ```
-4️⃣ Aja peli:
-```sh
-./Tankkipeli.exe
+Config.hpp
+EventManager.cpp / .hpp
+Explosion.cpp / .hpp
+GameCore.cpp  GameRender.cpp  Game.hpp
+Projectile.cpp / .hpp
+SoundManager.hpp
+TankControl.cpp  TankGraphics.cpp  TankPhysics.cpp  Tank.hpp
+Terrain.cpp / .hpp
+UI.cpp / .hpp
+main.cpp
+menu.cpp / .hpp
+version.cpp
 ```
 
 ---
 
-### **🟢 Linux/macOS (GCC/Clang)**
-1️⃣ Asenna tarvittavat paketit:
-```sh
+## ⚙️ Riippuvuudet
+
+- **CMake ≥ 3.15**
+- **SFML 2.6** (suositus: *vcpkg* → `vcpkg install sfml`  tai manuaalisesti)  
+- **C++17**‑kääntäjä (MSVC 19.3x, GCC 10+, Clang 12+)
+
+---
+
+## 🛠️ Kehittäjä‑build (Debug)
+
+### Windows – Visual Studio 2022
+
+```powershell
+cmake -B build -G "Visual Studio 17 2022" -DCMAKE_TOOLCHAIN_FILE=C:/vcpkg/scripts/buildsystems/vcpkg.cmake -DCMAKE_CONFIGURATION_TYPES=Debug
+cmake --build build --config Debug --parallel
+build\Debug\Tankkipeli.exe
+```
+
+### Windows – MinGW‑w64
+
+```bash
+cmake -B build -G "MinGW Makefiles" -DCMAKE_BUILD_TYPE=Debug
+mingw32-make -C build -j8
+build/Tankkipeli.exe
+```
+
+### Linux / macOS
+
+```bash
 sudo apt install build-essential cmake libsfml-dev
-```
-2️⃣ Luo build-kansio ja konfiguroi CMake:
-```sh
-mkdir build && cd build
-cmake ..
-make
-```
-3️⃣ Aja peli:
-```sh
-./Tankkipeli
+cmake -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build -j$(nproc)
+./build/Tankkipeli
 ```
 
 ---
 
-## 🎮 Pelin ohjaus (Controls)
-- **Vasen-nuoli ja Oikea-nuoli **: Säädä tykin kulmaa
-- **Ylös-nuoli ja Alas-nuoli**: Säädä laukaisuvoimaa
-- **Välilyönti (Space)**: Ammu
-- **Esc**: Poistu pelistä
+## 📦 Release‑build (Kehittäjille & Testaajille)
 
----
+### A. Windows‑64 bit – **build\_release.bat**
 
-## 📂 Projektin rakenne
-```
-📆 Tankkipeli
- ├🗂 src/           # Lähdekooditiedostot
- │ ├📝 main.cpp     # Pääohjelma
- │ ├📝 Game.cpp     # Pelin logiikka
- │ ├📝 Tank.cpp     # Tankin hallinta
- │ ├📝 Projectile.cpp # Ammuksen hallinta
- │ ├📝 Terrain.cpp  # Maaston käsittely
- ├🗂 include/       # Otsikkotiedostot
- │ ├📝 Game.hpp     # Pelilogiikan määrittelyt
- │ ├📝 Tank.hpp     # Tankkiin liittyvät määrittelyt
- │ ├📝 Projectile.hpp # Ammuksen määrittelyt
- │ ├📝 Terrain.hpp  # Maaston määrittelyt
- ├🗂 assets/        # Grafiikka- ja äänitiedostot
- ├🗂 tests/         # Testitiedostot
- ├📝 CMakeLists.txt # CMake-konfiguraatio
- ├📝 .gitignore     # GitHubin ignorointitiedosto
- ├📝 README.md      # Tämä tiedosto
- └📝 LICENSE        # Lisenssitiedosto (valinnainen)
+Skriptin ajaminen juurikansiosta:
+
+```powershell
+./build_release.bat
 ```
 
+Tuotokseksi syntyy *dist/*‑hakemisto ja **Tankkipeli--win64.zip** jossa:
+
+- `Tankkipeli.exe` (Release‑optimoitu, x64)
+- `assets/` (kuvat, fontit, äänet)
+- SFML‑DLL‑tiedostot + `version.txt`
+
+> **Käyttäjälle**: pura zip → käynnistä `Tankkipeli.exe`.
+
+### B. Manuaalinen Release (kaikki alustat)
+
+```bash
+cmake -B build -DCMAKE_BUILD_TYPE=Release \
+      -DCMAKE_TOOLCHAIN_FILE="C:/vcpkg/scripts/buildsystems/vcpkg.cmake"
+cmake --build build --config Release --parallel
+```
+
+- **Windows**: kopioi `build\Release\Tankkipeli.exe`, `assets/` ja SFML‑DLL‑kirjastot samaan kansioon.
+- **Linux/macOS**: kopioi `assets/` samaan hakemistoon tai vie se `~/.local/share/tankkipeli/`.
+
 ---
 
-## 🔮 Tulevat ominaisuudet (Backlog)
-✅ Rikkoutuva maasto  
-✅ Tankkien liikkuminen  
-✅ Ammuksen fysiikka (tuuli & painovoima)  
-🟡 Eri aseet (räjähtävä ja sirpaleammus)  
-🟡 Pelaajien vuoromekaniikka  
-🟡 Ääniefektit ja musiikki  
-🔴 Online-moninpeli  
+## 🎮 Ohjaus
+
+- **◄ / ►** – tykin kulma
+- **▲ / ▼** – panoksen voima
+- **A / D** – tankin liike
+- **Hiiri** – tähtäys & laukaisu (LMB) / voima (rulla)
+- **Esc** – Pause / valikko
 
 ---
 
-## 👥 Tekijät
+## 🤝 Osallistujat
 
+| Nimi       | Rooli        |
+| ---------- | ------------ |
+| *Täydennä* | Pääkehittäjä |
 
-## 📝 Lisenssi
+---
 
+## 📜 Lisenssi
+
+Koodi on julkaistu **MIT**‑lisenssillä – katso *LICENSE* jos lisäät koodia tai jaat peliä.
+
+> *Palautteet, bugiraportit ja PR*\*:t\*\* ovat tervetulleita – kiitos kun kokeilit Tankkipeliä!\*
 

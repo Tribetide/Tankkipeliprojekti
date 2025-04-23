@@ -10,13 +10,13 @@ Tank::Tank() : angle(45.0f), power(50.0f), hp(100), fuel(20), destroyed(false) {
     initialPosition = sf::Vector2f(350, 260);
 
     // Ladataan tekstuurit
-    if (!lowerBodyTexture.loadFromFile("../assets/images/lowerBody.png")) {
+    if (!lowerBodyTexture.loadFromFile("assets/images/lowerBody.png")) {
         std::cerr << "Error: Could not load lowerBody.png\n";
     }
-    if (!upperBodyTexture.loadFromFile("../assets/images/upperBody.png")) {
+    if (!upperBodyTexture.loadFromFile("assets/images/upperBody.png")) {
         std::cerr << "Error: Could not load upperBody.png\n";
     }
-    if (!turretTexture.loadFromFile("../assets/images/turret.png")) {
+    if (!turretTexture.loadFromFile("assets/images/turret.png")) {
         std::cerr << "Error: Could not load turret.png\n";
     }
 

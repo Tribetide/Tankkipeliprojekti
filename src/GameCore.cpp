@@ -45,7 +45,7 @@ Game::Game(sf::RenderWindow& win)
    
 
     // Kuun tekstuuri
-    moonTexture.loadFromFile("../assets/images/moon.png");
+    moonTexture.loadFromFile("assets/images/moon.png");
     moonSprite.setTexture(moonTexture);
     moonSprite.setPosition(1600, 100); // Säädä sijaintia
     moonSprite.setScale(0.6f, 0.6f);   // Säädä kokoa
