@@ -127,7 +127,7 @@ void Tank::update(Terrain &terrain, float gravity) {
     float moveAmount = gravity/100.0f;  // Testataan suuremmalla arvolla
     sf::Vector2f checkPoint(position.x + 30, position.y + 45); // Tarkistetaan kohta tankin alapuolella
 
-    if (checkPoint.x >= 0 && checkPoint.x < 1920 && checkPoint.y >= 0 && checkPoint.y < 1080 && 
+    if (checkPoint.x >= 0 && checkPoint.x < 1920 && checkPoint.y >= 0 && checkPoint.y < 1200 && 
         !terrain.checkCollision(checkPoint)) {
         // Ei maata alla: pudotaan
         upperBody.move(0, moveAmount);

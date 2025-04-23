@@ -260,6 +260,19 @@ void Game::update() {
         tank2DestroyedFxDone = true;
     }
 
+    // Tankin tuhoaminen, jos se on ruudun alapuolella
+    auto killIfOffscreen = [&](Tank& t, bool& fxDone)
+    {
+        const float FLOOR_Y = 1080.f;                 // ruudun ala-reuna
+        if (!t.isDestroyed() && t.getPosition().y > FLOOR_Y)
+        {
+            t.takeDamage(t.getHp());                  // tyhjennä HP
+            explosions.emplace_back(t.getPosition()); // visuaalinen räjähdys
+            fxDone = true;                            // estä toistuva efekti
+        }
+    };
+    killIfOffscreen(tank1, tank1DestroyedFxDone);
+    killIfOffscreen(tank2, tank2DestroyedFxDone);
 
     // 🔥 Päivitä eventManager ja anna sille projektiililista
     eventManager.update(projectiles);
