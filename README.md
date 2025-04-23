@@ -132,7 +132,6 @@ cmake --build build --config Release --parallel
 
 | Nimi       | Rooli        |
 | ---------- | ------------ |
-| *Täydennä* | Pääkehittäjä |
 
 ---
 
