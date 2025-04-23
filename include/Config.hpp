@@ -21,10 +21,6 @@ namespace Config {
 
     // Yksi apufunktio satunnaisen tuulen arvontaan
     inline float getRandomWind() {
-        // Huom: varmista srand() vain kerran ohjelman alussa, 
-        // tai tee staattinen tarkistus:
-        // static bool seeded = false;
-        // if (!seeded) { seeded = true; std::srand(std::time(nullptr)); }
 
         int range = WIND_MAX - WIND_MIN + 1; 
         int val = std::rand() % range + WIND_MIN;

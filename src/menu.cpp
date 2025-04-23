@@ -1,4 +1,5 @@
 #include "menu.hpp"
+#include "Config.hpp"
 #include <iostream>
 
 namespace Menu {
@@ -8,6 +9,7 @@ namespace Menu {
         sf::Font font;
         sf::Texture backgroundTexture;
         sf::Sprite backgroundSprite;
+        
 
         // Taustakuva
         if (!backgroundTexture.loadFromFile("assets/images/MenuBackground.png")) {
@@ -20,10 +22,12 @@ namespace Menu {
         );
 
         // Fontti
-        if (!font.loadFromFile("assets/fonts/SHOWG.TTF")) {
-            std::cerr << "Fontin lataus epäonnistui!\n";
-            return 2;
-        }
+        for (auto path :
+            {Config::FONT_PATH_1,
+             Config::FONT_PATH_2,
+             Config::FONT_PATH_3})
+           if (font.loadFromFile(path)) break; // Lataa fontti, jos ei onnistu, kokeile seuraavaa,
+
 
         // Tekstit
         sf::Text title("Tankkipeli", font, 75);
@@ -84,9 +88,11 @@ namespace Menu {
     // 🔷 Pause-valikko pelin sisällä
     int showPauseMenu(sf::RenderWindow &window) {
         sf::Font font;
-        if (!font.loadFromFile("assets/fonts/SHOWG.TTF")) {
-            return 3;
-        }
+        for (auto path :
+            {Config::FONT_PATH_1,
+             Config::FONT_PATH_2,
+             Config::FONT_PATH_3})
+           if (font.loadFromFile(path)) break;
 
         // Valikkotekstit
         sf::Text continueText("1. Continue (C)", font, 30);

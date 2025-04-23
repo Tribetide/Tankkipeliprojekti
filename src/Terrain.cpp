@@ -32,6 +32,7 @@ namespace {
             int xi = (int)std::floor(x) & 255;
             int yi = (int)std::floor(y) & 255;
 
+            // hash, tämä
             double xf = x - std::floor(x);
             double yf = y - std::floor(y);
 
@@ -50,14 +51,11 @@ namespace {
 
     private:
         double fade(double t) const {
-            // 6t^5 - 15t^4 + 10t^3
             return t * t * t * (t * (t * 6 - 15) + 10);
         }
-
         double lerp(double a, double b, double t) const {
             return a + t * (b - a);
         }
-
         double grad(int hash, double x, double y) const {
             switch (hash & 3) {
                 case 0: return  x + y;
@@ -73,12 +71,12 @@ namespace {
     };
 
 
-        // — Kerrosvärit —
+    // Kerrosvärit 
     const sf::Color GRASS_COLOR  ( 34,139, 34);  // vihreä
     const sf::Color SOIL_COLOR   (139, 69, 19);  // ruskea
     const sf::Color ROCK_COLOR   (128,128,128);  // harmaa
 
-    // — Kerrosten paksuudet pikseleinä —
+    // Kerrosten paksuudet pikseleinä 
     constexpr int GRASS_THICK = 30;     // pinnalla   
     constexpr int SOIL_THICK  = 250;    // ruohon alla  
                                         // loput → kallio
@@ -90,7 +88,7 @@ namespace {
 // Terrain-luokan toteutus
 // =============================
 Terrain::Terrain() {
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
+    std::srand(static_cast<unsigned>(std::time(nullptr))); // satunnainen siemen
 }
 
 // Alustetaan maasto Perlin noise -tekniikalla
@@ -105,7 +103,7 @@ void Terrain::initialize() {
     unsigned int seed = static_cast<unsigned>(std::time(nullptr));
     PerlinNoise perlin(seed);
 
-    // Luodaan toinen PerlinNoise-olio maa värejä varten
+    // Luodaan PerlinNoise-oliot eri tarkoituksiin
     PerlinNoise soilNoise(seed + 4242);   // maan siemen
     PerlinNoise grassNoise(seed + 1337);  // ruohon siemen
     PerlinNoise ditherNoise(seed + 9999); // dither noise
@@ -149,9 +147,9 @@ void Terrain::initialize() {
 
     }
 
-        //  Piirretään pikselit
-        //   Käydään uudelleen x:ssä, poimitaan groundHeights[x],
-        //   lasketaan jyrkkyys (slope), ja maalataan y = groundY..1080
+    //  Piirretään pikselit
+    //   Käydään uudelleen x:ssä, poimitaan groundHeights[x],
+    //   lasketaan jyrkkyys (slope), ja maalataan y = groundY..1080
     for (int x = 0; x < 1920; x++) {
         int gY = groundHeights[x];
         if (gY < 0)   gY = 0;
@@ -190,9 +188,7 @@ void Terrain::initialize() {
                 baseCol = ROCK_COLOR;
             }
 
-            // — Tee pieni satunnaisdither ja rinteen tummentaminen —
-            //double dn = ditherNoise.noise(x * 0.005, y * 0.005); // taajuus 0.05…
-            //int dither = static_cast<int>(dn * 20.0 - 5.0); // 
+            // Perlinin satunnainen dither noise
             int dither = ((x ^ y) & 3) - 15; //
             int slopeDarken = slope;                        // jyrkkyys tummentaa
 
