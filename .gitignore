@@ -17,7 +17,8 @@
 /*.cmake
 *.ninja  # Ninja build -tiedostot (varotoimi)
 
-
+# 🔹 Vcpkg -käännöksen luomat tiedostot
+vcpkg/
 vcpkg.json
 CMakePresets.json
 CMakeUserPresets.json
@@ -26,6 +27,8 @@ CMakeUserPresets.json
 /build/
 Debug/
 Release/
+dir_&_Combine/
+
 
 # 🔹 Testien build-kansiot (jos testejä käännetään erikseen)
 tests/build/
@@ -43,6 +46,8 @@ vcpkg_installed/
 
 # 🔹 Dokumentaatio (jos sisältää vain kehitysdokumentaatiota)
 docs/
+
+
 
 # 🔹 Väliaikaiset CMake-tiedostot
 CMake_SFML(*).txt
