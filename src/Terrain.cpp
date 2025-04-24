@@ -96,7 +96,6 @@ namespace {
 Terrain::Terrain() {
     std::srand(static_cast<unsigned>(std::time(nullptr))); // satunnainen siemen
 
-
 }
 
 // Alustetaan maasto Perlin noise -tekniikalla

@@ -8,7 +8,7 @@
 
 float EventManager::getTimeLeft() const {
     // 🔥 Jos ajastin on pysäytetty, näytetään jäljellä oleva aika tallennetusta arvosta
-    float timeLeft = TURN_TIME_LIMIT - (turnTimerPaused ? pausedTime : turnClock.getElapsedTime().asSeconds());
+    float timeLeft = Config::TURN_TIME_LIMIT - (turnTimerPaused ? pausedTime : turnClock.getElapsedTime().asSeconds());
     return std::max(0, static_cast<int>(std::floor(timeLeft)));
 }
 
@@ -22,7 +22,7 @@ EventManager::EventManager(Tank &t1, Tank &t2, Game &g)
     void EventManager::reset(Tank &t1, Tank &t2, Game & /*game*/) {
         tank1 = t1;
         tank2 = t2;
-        currentTank = 0;
+        currentTank = std::rand() % 2;;
         turnClock.restart();
         turnTimerPaused = false;
         pausedTime = 0.0f;
@@ -42,14 +42,14 @@ void EventManager::update(const std::vector<Projectile>& projectiles) {
 
     // Vuoron vaihto, jos odotetaan ammusten lentoa
     if (waitingForTurnSwitch) {
-        if (turnSwitchClock.getElapsedTime().asSeconds() >= 2.0f) {  
+        if (turnSwitchClock.getElapsedTime().asSeconds() >= Config::TURN_SWITCH_DELAY) {  
             float windForce = 0.0f;  // 
             switchTurn(windForce, game);
             waitingForTurnSwitch = false;
         }
     } 
     // Ajastin on mennyt nollaan, mutta tarkistetaan, onko ammus elossa
-    else if (!turnTimerPaused && turnClock.getElapsedTime().asSeconds() > TURN_TIME_LIMIT) {
+    else if (!turnTimerPaused && turnClock.getElapsedTime().asSeconds() > Config::TURN_TIME_LIMIT) {
         if (!anyProjectilesAlive(projectiles)) {  
             float windForce = 0.0f;
             switchTurn(windForce, game);

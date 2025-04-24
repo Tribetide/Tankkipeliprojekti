@@ -9,7 +9,7 @@
 // 🔥 Vain eteenpäin ilmoitus Game-luokasta
 class Game;
 
-const float TURN_TIME_LIMIT = 30.0f;
+
 
 class EventManager {
 public:

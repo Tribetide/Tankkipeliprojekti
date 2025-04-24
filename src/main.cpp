@@ -22,7 +22,7 @@ int main() {
         std::cerr << "Virhe ladattaessa War.ogg\n";
     }
     if (!soundMgr.loadSound("tank_destroyed",
-            "assets/sounds/Tank_Destroyed.ogg"))           // ←  tarkista tiedostonimi!
+            "assets/sounds/Tank_Destroyed.ogg"))           
     {
         std::cerr << "Virhe ladattaessa Tank_Destroyed.ogg\n";
     }

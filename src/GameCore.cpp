@@ -172,7 +172,7 @@ void Game::update() {
                 explosions.end());
     
             // Kun tauko on kulunut, lopeta peli
-            if (endGameClock.getElapsedTime().asSeconds() >= 1.0f) {
+            if (endGameClock.getElapsedTime().asSeconds() >= Config::ENDGAME_DELAY) {
                 pendingEndGame = false;
                 endGame();
             }
@@ -217,10 +217,10 @@ void Game::update() {
     
         // Tarkistetaan, osuuko ammuksen rajat vastustajan tankin rajojen kanssa
         if (proj.alive && proj.getBounds().intersects(opponentTank.getBounds())) {
-            opponentTank.takeDamage(30);
+            opponentTank.takeDamage(Config::DIRECT_HIT_DAMAGE);
             explosions.emplace_back(proj.shape.getPosition());
             proj.alive = false;
-            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), 55);
+            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), Config::EXPLOSION_RADIUS);
             spawnDebris(destroyed, proj.shape.getPosition()); 
             SoundManager::getInstance().playSound("explosion", 100.f);
         }
@@ -229,7 +229,7 @@ void Game::update() {
         if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
             explosions.emplace_back(proj.shape.getPosition());
             proj.alive = false;
-            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), 45);
+            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), Config::EXPLOSION_RADIUS);
             spawnDebris(destroyed, proj.shape.getPosition());
             SoundManager::getInstance().playSound("explosion", 100.f);
         }
@@ -291,7 +291,7 @@ void Game::update() {
     eventManager.update(projectiles);
 
     if (waitingForTurnSwitch) { // 🔥 Odotetaan vuoron vaihtoa
-        if (turnClock.getElapsedTime().asSeconds() >= 2.0f && !eventManager.anyProjectilesAlive(projectiles)) {
+        if (turnClock.getElapsedTime().asSeconds() >= Config::TURN_SWITCH_DELAY && !eventManager.anyProjectilesAlive(projectiles)) {
             eventManager.switchTurn(windForce, *this);  // 🔥 Lisätty `*this`
             waitingForTurnSwitch = false;
             eventManager.restartTurnTimer();

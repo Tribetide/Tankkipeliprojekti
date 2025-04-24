@@ -28,14 +28,14 @@ void Tank::rotateTurret(float angleDelta) {
 ========================*/
 void Tank::adjustPower(float powerDelta) {
 
-    power = std::clamp(power + powerDelta, 10.f, 100.f); // Rajoitetaan voiman säätö 10–100 väliin
+    power = std::clamp(power + powerDelta, Config::POWER_MIN, Config::POWER_MAX); // Rajoitetaan voiman säätö 10–100 väliin
 }
 
 Projectile Tank::shoot() {
     SoundManager::getInstance().playSound("fire", 100.f);
 
+    
     Projectile p;
-    p.shape.setRadius(5.f);
     p.shape.setFillColor(sf::Color::Red);
 
     // Lasketaan ammuksen lähtönopeus ja suunta
@@ -73,17 +73,17 @@ void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain,
     if (destroyed) return; // Ei voi liikkua tai ampua, jos tankki on tuhottu
 
     if (key == sf::Keyboard::Left)
-        rotateTurret(-5.0f);  // Kääntää tykkiä vasemmalle
+        rotateTurret(-Config::TURRET_ROTATE);  // Kääntää tykkiä vasemmalle
     else if (key == sf::Keyboard::Right)
-        rotateTurret(5.0f);   // Kääntää tykkiä oikealle
+        rotateTurret(Config::TURRET_ROTATE);   // Kääntää tykkiä oikealle
     else if (key == sf::Keyboard::Up)
-        adjustPower(5.0f);   // Lisää ammuksen lähtövoimaa
+        adjustPower(Config::TURRET_ROTATE);   // Lisää ammuksen lähtövoimaa
     else if (key == sf::Keyboard::Down)
-        adjustPower(-5.0f);  // Vähentää ammuksen lähtövoimaa
+        adjustPower(-Config::TURRET_ROTATE);  // Vähentää ammuksen lähtövoimaa
     else if (key == sf::Keyboard::A)
-        move(-5.0f, terrain, opponent);  // Siirtää tankkia vasemmalle, huomioiden maaston
+        move(-Config::TANK_MOVE, terrain, opponent);  // Siirtää tankkia vasemmalle, huomioiden maaston
     else if (key == sf::Keyboard::D)
-        move(5.0f, terrain, opponent);   // Siirtää tankkia oikealle, huomioiden maaston
+        move(Config::TANK_MOVE, terrain, opponent);   // Siirtää tankkia oikealle, huomioiden maaston
     else if (key == sf::Keyboard::Space) { // Ammus laukaistaan
         projectiles.push_back(shoot());  // Luodaan uusi ammus ja lisätään se projektiilien listaan
         turnClock.restart();  // Nollataan ajastin seuraavaa vuoroa varten
@@ -98,6 +98,7 @@ void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain,
 void Tank::handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &projectiles,
                             bool &waitingForTurnSwitch, sf::Clock &turnClock) {
     if (destroyed) return; // Ei voi liikkua tai ampua, jos tankki on tuhottu
+
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     sf::Vector2f tankPos = upperBody.getPosition();
 
@@ -108,12 +109,12 @@ void Tank::handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &p
         float newAngle = std::atan2(dy, dx) * 180.0f / 3.14159f;
 
         angle = newAngle + 90;
-        if (angle < 0) angle += 360.0f; // Normalisointi 0–360
+        if (angle < 0) angle += 360.0f; 
         else if (angle >= 360.0f) angle -= 360.0f;
         
         turret.setRotation(angle - 90.0f);
 
-        mouseDragStartY = -1.f; // Nollataan drag-tila kun ei paineta oikeaa
+        mouseDragStartY = -1.f; // Drag-tila nollataan kun hiiren oikea nappi vapautetaan
     } 
     else {
         // Jos oikea hiirinappi on juuri painettu alas

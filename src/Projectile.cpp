@@ -5,7 +5,7 @@
 
 
 Projectile::Projectile() : velocity(0.f, 0.f), alive(false), gravity(Config::GRAVITY) {
-    shape.setRadius(5.f);
+    shape.setRadius(Config::PROJECTILE_RADIUS);
     shape.setFillColor(sf::Color::White);
 }
 
@@ -24,7 +24,8 @@ void Projectile::update(float deltaTime, Terrain &terrain, float windForce) {
 
     // 🔥 Tuhoutuminen, jos ammus menee ruudun ulkopuolelle
     sf::Vector2f pos = shape.getPosition();
-    if (pos.x < -50 || pos.x > 2000 || pos.y < -1000 || pos.y > 1200) {
+    if (pos.x < Config::PROJECTILE_BOUND_LEFT || pos.x > Config::PROJECTILE_BOUND_RIGHT ||
+         pos.y < Config::PROJECTILE_BOUND_TOP || pos.y > Config::PROJECTILE_BOUND_BOTTOM) {
         alive = false;
     }
 }
