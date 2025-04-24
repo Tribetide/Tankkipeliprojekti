@@ -8,6 +8,27 @@
     TANKIN FYSIIKKA
 ==================================*/
 
+
+// Apu­funktio – löytää ”maan” Y-koordinaatin annetusta X:stä
+static float findGroundY(float x, const Terrain& terrain, int screenH   = 1080) 
+{
+        //Etsi ensimmäinen kiinteä pikseli alhaalta 
+        int y = screenH - 1;
+        while (y >= 0 && !terrain.checkCollision(sf::Vector2f(x, (float)y)))
+        --y;
+
+        if (y < 0)                     // koko sarake on ilmaa → palautetaan "taivas"
+        return (float)screenH;
+
+        // Kulje ylöspäin niin kauan kuin pikseli on kiinteä 
+        while (y >= 0 && terrain.checkCollision(sf::Vector2f(x, (float)y)))
+        --y;
+
+        // Kunnes löydetään ilmapikseli, palauta seuraava pikseli
+        return (float)(y + 1);
+    }
+
+
 void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
 
     if (fuel <= 0) return;  // Ei voi liikkua, jos polttoaine loppu
@@ -15,28 +36,15 @@ void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
         std::cout << "[MOVE] Fuel empty, cannot move." << std::endl;
         return;
     }
+    
 
     sf::Vector2f oldPosition = upperBody.getPosition();
     sf::Vector2f newPosition = oldPosition;
     newPosition.x += dx;
 
-    // Haetaan uusi korkeus skannaamalla alhaalta ylöspäin
-    float newHeight = 0.f;
-    for (int i = 0; i < 1080; i++) {
-        if (terrain.checkCollision(sf::Vector2f(newPosition.x + 30, i))) {
-            newHeight = i;
-            break;
-        }
-    }
-
-    // Haetaan vanhan sijainnin maapinnan korkeus
-    float oldHeight = 0.f;
-    for (int i = 0; i < 1080; i++) {
-        if (terrain.checkCollision(sf::Vector2f(oldPosition.x + 30, i))) {
-            oldHeight = i;
-            break;
-        }
-    }
+    // Lasketaan uusi maapinnan korkeus (groundY) uuden X:n perusteella
+    float newHeight = findGroundY(newPosition.x + 30.f, terrain);
+    float oldHeight = findGroundY(oldPosition.x + 30.f, terrain);
 
     // Lasketaan absoluuttinen korkeusero (slope) – debug-tulostukseksi
     float slope = std::abs(newHeight - oldHeight);
@@ -72,50 +80,50 @@ void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
     // Jos taas heightDiff >= 0, eli maapinta laskee (tai pysyy samana),
     // sallitaan liike, vaikka kulma olisi lähellä 90°.
     
-  // Lasketaan uusi y-sijainti suoraan laskettuna: pohjakorkeus - offset
-  float targetY = newHeight - 40;
-  std::cout << "[DEBUG] Target Y = " << targetY << std::endl;
-  
-  // Pehmentää pudotusta: jos tankin nykyisestä y:stä on iso ero targetY:ssa, 
-  // rajoitetaan pudotus askeleeseen "maxFallStep".
-  const float maxFallStep = 10.0f; // Maksimitiputuksen määrä pikseleinä per siirto
-  float currentY = oldPosition.y;
-  float fallDelta = targetY - currentY;
-  float adjustedY = currentY;
-  
-  if (fallDelta > maxFallStep) {  // Laskeutuessa (alamäkeen)
-      adjustedY = currentY + maxFallStep;
-  } else if (fallDelta < -maxFallStep) {  // Nousussa: rajoitetaan nousu
-      adjustedY = currentY - maxFallStep;
-  } else {
-      adjustedY = targetY;
-  }
-  std::cout << "[DEBUG] Adjusted Y = " << adjustedY << std::endl;
-  
-  // Tarkistetaan tuleva bounding box törmäysten varalta
-  sf::FloatRect futureBounds = this->getBounds();
-  futureBounds.left += dx;
-  futureBounds.top  += adjustedY - upperBody.getPosition().y;
-  
-  if (futureBounds.intersects(opponent.getBounds())) {
-      std::cout << "[MOVE] Aborting move: collision with opponent." << std::endl;
-      return;
-  }
-  
-  // Päivitetään tankin sijainti
-  upperBody.setPosition(newPosition.x, adjustedY);
-  lowerBody.setPosition(
-      upperBody.getPosition().x,
-      upperBody.getPosition().y + upperBody.getSize().y * upperBody.getScale().y
-  );
-  turret.setPosition(
-      upperBody.getPosition().x + 25 * turret.getScale().x,
-      upperBody.getPosition().y
-  );
-  
-  fuel--;
-  std::cout << "[MOVE] Move successful. New position: (" 
-            << newPosition.x << ", " << adjustedY << "), Remaining fuel: " << fuel << std::endl;
+    // Lasketaan uusi y-sijainti suoraan laskettuna: pohjakorkeus - offset
+    float targetY = newHeight - 40;
+    std::cout << "[DEBUG] Target Y = " << targetY << std::endl;
+    
+    // Pehmentää pudotusta: jos tankin nykyisestä y:stä on iso ero targetY:ssa, 
+    // rajoitetaan pudotus askeleeseen "maxFallStep".
+    const float maxFallStep = 10.0f; // Maksimitiputuksen määrä pikseleinä per siirto
+    float currentY = oldPosition.y;
+    float fallDelta = targetY - currentY;
+    float adjustedY = currentY;
+    
+    if (fallDelta > maxFallStep) {  // Laskeutuessa (alamäkeen)
+            adjustedY = currentY + maxFallStep;
+        } else if (fallDelta < -maxFallStep) {  // Nousussa: rajoitetaan nousu
+            adjustedY = currentY - maxFallStep;
+        } else {
+            adjustedY = targetY;
+        }
+        std::cout << "[DEBUG] Adjusted Y = " << adjustedY << std::endl;
+    
+        // Tarkistetaan tuleva bounding box törmäysten varalta
+        sf::FloatRect futureBounds = this->getBounds();
+        futureBounds.left += dx;
+        futureBounds.top  += adjustedY - upperBody.getPosition().y;
+        
+        if (futureBounds.intersects(opponent.getBounds())) {
+            std::cout << "[MOVE] Aborting move: collision with opponent." << std::endl;
+            return;
+        }
+        
+        // Päivitetään tankin sijainti
+        upperBody.setPosition(newPosition.x, adjustedY);
+        lowerBody.setPosition(
+            upperBody.getPosition().x,
+            upperBody.getPosition().y + upperBody.getSize().y * upperBody.getScale().y
+        );
+        turret.setPosition(
+            upperBody.getPosition().x + 25 * turret.getScale().x,
+            upperBody.getPosition().y
+        );
+        
+        fuel--;
+        std::cout << "[MOVE] Move successful. New position: (" 
+                    << newPosition.x << ", " << adjustedY << "), Remaining fuel: " << fuel << std::endl;
 }
 
 /*=========================
