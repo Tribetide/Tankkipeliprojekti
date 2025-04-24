@@ -274,6 +274,24 @@ void Game::update() {
     killIfOffscreen(tank1, tank1DestroyedFxDone);
     killIfOffscreen(tank2, tank2DestroyedFxDone);
 
+    // Tankin tuhoutuminen, jos se on laavassa
+    auto killIfInLava = [&](Tank& t, bool& fxDone)
+    {
+        if (t.isDestroyed()) return;
+
+        sf::Vector2f sample( t.getPosition().x + 30.f,  
+                            t.getPosition().y + 45.f ); 
+
+        if (terrain.isLavaAt(sample))
+        {
+            t.takeDamage(t.getHp());                     
+            explosions.emplace_back(t.getPosition());    
+            fxDone = true;
+        }
+    };
+    killIfInLava(tank1, tank1DestroyedFxDone);
+    killIfInLava(tank2, tank2DestroyedFxDone);
+
     // 🔥 Päivitä eventManager ja anna sille projektiililista
     eventManager.update(projectiles);
 

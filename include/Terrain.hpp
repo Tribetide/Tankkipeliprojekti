@@ -14,11 +14,11 @@ public:
     Terrain();
     void initialize();                               // Generoi maasto
     void draw(sf::RenderWindow &window);             // Piirtää maaston
-    bool checkCollision(sf::Vector2f position);      // Törmäystarkistus
-    //void destroy(sf::Vector2f position, int radius); // Tuhotaan pikseleitä
-    std::vector<PixelInfo> destroy(sf::Vector2f position, int baseRadius);
+    bool checkCollision(const sf::Vector2f& point) const;  // Törmäystarkistus
+    std::vector<PixelInfo> destroy(sf::Vector2f position, int baseRadius); // Tuhotaan pikseleitä
     void createSky();                                // Luo tähdet
     void update(float deltaTime);                    // Päivittää tähdenlennot
+    bool isLavaAt(sf::Vector2f point) const;
 
 private:
     sf::Texture texture;
@@ -29,6 +29,7 @@ private:
     sf::CircleShape moon; // (jos haluat pitää kuun)
     std::vector<sf::Vector2f> stars;
     
+    bool isLavaPixel(const sf::Color& c) const; 
 
     struct ShootingStar {
         sf::Vector2f position;
@@ -45,7 +46,7 @@ struct Debris {
     sf::Vector2f position;
     sf::Vector2f velocity;
     sf::Color color;
-    float lifetime;  // kuinka monta sekuntia partikkeli pysyy elossa
+    float lifetime;
 
     Debris(sf::Vector2f pos, sf::Vector2f vel, sf::Color c, float life)
         : position(pos), velocity(vel), color(c), lifetime(life) {}

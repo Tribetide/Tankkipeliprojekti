@@ -32,18 +32,21 @@ namespace {
             int xi = (int)std::floor(x) & 255;
             int yi = (int)std::floor(y) & 255;
 
-            // hash, tämä
+            // Lasketaan x- ja y-koordinaattien jäännösluku
             double xf = x - std::floor(x);
             double yf = y - std::floor(y);
 
+            // Lasketaan hash-arvot
             int aa = p[p[xi] + yi];
             int ab = p[p[xi] + yi + 1];
             int ba = p[p[xi + 1] + yi];
             int bb = p[p[xi + 1] + yi + 1];
 
+            // Lasketaan interpolointi
             double u = fade(xf);
             double v = fade(yf);
 
+            // Interpoloi x- ja y-koordinaatit
             double x1 = lerp(grad(aa, xf, yf), grad(ba, xf - 1, yf), u);
             double x2 = lerp(grad(ab, xf, yf - 1), grad(bb, xf - 1, yf - 1), u);
             return lerp(x1, x2, v);
@@ -75,11 +78,14 @@ namespace {
     const sf::Color GRASS_COLOR  ( 34,139, 34);  // vihreä
     const sf::Color SOIL_COLOR   (139, 69, 19);  // ruskea
     const sf::Color ROCK_COLOR   (128,128,128);  // harmaa
+    const sf::Color LAVA_COLOR  (255, 64,  0);  // hehkuva oranssi
 
     // Kerrosten paksuudet pikseleinä 
     constexpr int GRASS_THICK = 30;     // pinnalla   
-    constexpr int SOIL_THICK  = 250;    // ruohon alla  
-                                        // loput → kallio
+    constexpr int SOIL_THICK  = 250;    // ruohon alla
+    constexpr int LAVA_MIN_THICK = 60;   
+    constexpr int LAVA_MAX_THICK = 110; 
+                                        
     
 }
 
@@ -89,12 +95,14 @@ namespace {
 // =============================
 Terrain::Terrain() {
     std::srand(static_cast<unsigned>(std::time(nullptr))); // satunnainen siemen
+
+
 }
 
 // Alustetaan maasto Perlin noise -tekniikalla
 void Terrain::initialize() {
     
-    createSky(); // Kuu & tähdet pysyvät
+    createSky(); // Kuu & tähdet
 
     // Luodaan kuva aluksi tyhjänä (läpinäkyvä) koko ruudun kokoisena
     terrainImage.create(1920, 1080, sf::Color::Transparent);
@@ -107,6 +115,7 @@ void Terrain::initialize() {
     PerlinNoise soilNoise(seed + 4242);   // maan siemen
     PerlinNoise grassNoise(seed + 1337);  // ruohon siemen
     PerlinNoise ditherNoise(seed + 9999); // dither noise
+    PerlinNoise lavaNoise   (seed + 5555); // laava noise
     
 
     // Parametrit, joilla voi muuttaa maaston ulkonäköä
@@ -147,9 +156,7 @@ void Terrain::initialize() {
 
     }
 
-    //  Piirretään pikselit
-    //   Käydään uudelleen x:ssä, poimitaan groundHeights[x],
-    //   lasketaan jyrkkyys (slope), ja maalataan y = groundY..1080
+    // Piirretään maasto pikseli kerrallaan
     for (int x = 0; x < 1920; x++) {
         int gY = groundHeights[x];
         if (gY < 0)   gY = 0;
@@ -164,8 +171,13 @@ void Terrain::initialize() {
         // Perlinen satunnainen vaihtelu maa‑kerroksen paksuuteen
         double ns = soilNoise.noise(x * 0.005, 0.0);      // −1…1
         int    localSoil = SOIL_THICK + static_cast<int>(ns * 50);
-        localSoil = std::clamp(localSoil, 200, 250);      // raja‑arvot
+        localSoil = std::clamp(localSoil, 200, 250);      
 
+        double nl = lavaNoise.noise(x * 0.004, 0.0); // −1…1
+        int localLava = LAVA_MIN_THICK + static_cast<int>(nl * (LAVA_MAX_THICK-LAVA_MIN_THICK)/2);
+        localLava = std::clamp(localLava, LAVA_MIN_THICK, LAVA_MAX_THICK);
+
+        int lavaStartY = 1080 - localLava; 
 
         // Lasketaan jyrkkyys verrattuna viereiseen x+1
         int slope = 0;
@@ -180,11 +192,13 @@ void Terrain::initialize() {
             int depth = y - gY;
 
             sf::Color baseCol;
-            if (depth < localGrass) {                // ruoho
+            if (y >= lavaStartY) {               // laava aivan alimpana
+                baseCol = LAVA_COLOR;
+            } else if (depth < localGrass) {            // ruohokerros
                 baseCol = GRASS_COLOR;
-            } else if (depth < localGrass + localSoil) { // multa
+            } else if (depth < localGrass + localSoil) {// multakerros
                 baseCol = SOIL_COLOR;
-            } else {                                 // kallio
+            } else {                                    // kallio
                 baseCol = ROCK_COLOR;
             }
 
@@ -196,6 +210,13 @@ void Terrain::initialize() {
             int g = std::clamp<int>(baseCol.g + dither - slopeDarken, 0, 255);
             int b = std::clamp<int>(baseCol.b + dither - slopeDarken, 0, 255);
 
+            // Laavapikselit saavat satunnaista hehkua
+            if (y >= lavaStartY) {
+                int flicker = std::rand() % 8;     
+                r = std::clamp(r + flicker, 0, 255);
+                g = std::clamp(g + flicker / 2, 0, 255);
+            }
+
             // Asetetaan pikseli
             terrainImage.setPixel(x, y, sf::Color(r,g,b));
         }
@@ -206,6 +227,26 @@ void Terrain::initialize() {
     sprite.setTexture(texture);
     sprite.setPosition(0, 0);    // Asetetaan sprite alkuperäiseen paikkaan
 }
+
+// Tarkistetaan onko pikseli laavaa
+bool Terrain::isLavaPixel(const sf::Color& c) const
+{
+    return (c.r > 240 && c.g < 120 && c.b < 60); 
+}
+
+// Tarkisteaan onko laavaa tankin
+bool Terrain::isLavaAt(sf::Vector2f point) const
+{
+    int x = (int)point.x;
+    int y = (int)point.y;
+
+    if (x < 0 || x >= (int)terrainImage.getSize().x ||
+        y < 0 || y >= (int)terrainImage.getSize().y)
+        return false;
+
+    return isLavaPixel( terrainImage.getPixel(x, y) );
+}
+
 
 void Terrain::update(float deltaTime) {
     shootingStarTimer += deltaTime;
@@ -279,13 +320,13 @@ void Terrain::draw(sf::RenderWindow &window) {
     window.draw(sprite);
 }
 
-bool Terrain::checkCollision(sf::Vector2f position) {
-    int x = static_cast<int>(position.x);
-    int y = static_cast<int>(position.y);
+// Tarkistetaan törmäys maaston kanssa
+bool Terrain::checkCollision(const sf::Vector2f& point) const {
+    int x = static_cast<int>(point.x);
+    int y = static_cast<int>(point.y);
 
     if (x >= 0 && x < terrainImage.getSize().x &&
         y >= 0 && y < terrainImage.getSize().y) {
-        // Palauttaa true, jos pikseli ei ole läpinäkyvä
         return (terrainImage.getPixel(x, y).a != 0);
     }
     return false;
@@ -298,37 +339,28 @@ std::vector<PixelInfo> Terrain::destroy(sf::Vector2f position, int baseRadius) {
 
     int radius = baseRadius + (y0 / 20); // Suurempi säde alhaalla, pienempi ylhäällä
 
-    // Tässä voisit kerätä hajotettavat pikselit talteen:
-    std::vector<PixelInfo> destroyedPixelInfos;
+    // Kerätään tuhotut pikselit
+    std::vector<PixelInfo> destroyed;
 
-    for (int i = -radius; i <= radius; ++i) {
-        for (int j = -radius; j <= radius; ++j) {
-            if (std::sqrt(i * i + j * j) <= radius) {
-                int x = x0 + i;
-                int y = y0 + j;
-                if (x >= 0 && x < (int)terrainImage.getSize().x &&
-                    y >= 0 && y < (int)terrainImage.getSize().y) 
-                {
-                    // Lue pikselin väri ENNEN tyhjentämistä:
-                    sf::Color oldColor = terrainImage.getPixel(x, y);
+    for (int dx=-radius; dx<=radius; ++dx)
+    for (int dy=-radius; dy<=radius; ++dy)
+    {
+        if (std::sqrt(dx*dx+dy*dy) > radius) continue;
 
-                    // Jos pikseli ei ole jo läpinäkyvä, tallenna info
-                    if (oldColor.a != 0) {
-                        PixelInfo info;
-                        info.coords = sf::Vector2i(x, y);
-                        info.color  = oldColor;
-                        destroyedPixelInfos.push_back(info);
-                    }
-                    // Tyhjennetään pikseli (läpinäkyvä)
-                    terrainImage.setPixel(x, y, sf::Color::Transparent);
-                }
-            }
-        }
+        int x = x0+dx, y = y0+dy;
+        if (x<0||x>1919||y<0||y>1079) continue;
+
+        sf::Color old = terrainImage.getPixel(x,y);
+        if (old.a==0) continue;                 // jo tyhjä
+        if (isLavaPixel(old)) continue;         // ❷ älä koske laavaan
+
+        destroyed.push_back({{x,y},old});
+        terrainImage.setPixel(x,y,sf::Color::Transparent);
     }
 
     // Päivitetään tekstuuri
     texture.update(terrainImage);
 
     // Palautetaan tuhotut pikselit
-    return destroyedPixelInfos;
+    return destroyed;
 }
