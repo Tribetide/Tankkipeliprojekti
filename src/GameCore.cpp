@@ -128,7 +128,6 @@ void Game::processEvents() {
 
         /* ----------  Hiiri ---------- */
 
-
         // Hiiriohjaus ohjaukseen ja tankin liikkumiseen:
         if (event.type == sf::Event::MouseMoved) {
             activeTank.handleMouseInput(window, projectiles, waitingForTurnSwitch, turnClock);
@@ -221,8 +220,8 @@ void Game::update() {
             opponentTank.takeDamage(30);
             explosions.emplace_back(proj.shape.getPosition());
             proj.alive = false;
-            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), 60);
-            spawnDebris(destroyed, proj.shape.getPosition()); // 60:lla määritellään laajempi tuhoamisalue
+            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), 55);
+            spawnDebris(destroyed, proj.shape.getPosition()); 
             SoundManager::getInstance().playSound("explosion", 100.f);
         }
     
@@ -230,18 +229,11 @@ void Game::update() {
         if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
             explosions.emplace_back(proj.shape.getPosition());
             proj.alive = false;
-            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), 50);
+            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), 45);
             spawnDebris(destroyed, proj.shape.getPosition());
             SoundManager::getInstance().playSound("explosion", 100.f);
         }
     
-        if (proj.alive && terrain.checkCollision(proj.shape.getPosition())) {
-            explosions.emplace_back(proj.shape.getPosition()); // 🔥 Lisää räjähdys
-            proj.alive = false;
-            std::vector<PixelInfo> destroyed = terrain.destroy(proj.shape.getPosition(), 50);
-            spawnDebris(destroyed, proj.shape.getPosition());
-            SoundManager::getInstance().playSound("explosion", 100.f);
-        }
     }
 
     // 🔥 Poista kuolleet ammukset listasta
@@ -309,43 +301,53 @@ void Game::update() {
 
     // Päivitetään partikkelien sijainti ja tarkistetaan törmäykset maastoon
     for (auto &d : debrisList) {
-        // 1) Liikutetaan partikkelia
-        d.position += d.velocity * deltaTime;
-        
-        // 2) Painovoima
-        d.velocity.y += gravity * 0.5f * deltaTime;
-        
-        // 3) Tarkistetaan törmääkö maahan
-        if (d.position.x >= 0 && d.position.x < 1920 &&
-            d.position.y >= 0 && d.position.y < 1080)
-        {
-            // Jos pikseli on "kiinteä" (maata) => pysäytä velocity
-            if (terrain.checkCollision(d.position)) {
-                // Yksinkertaisesti nostetaan partikkelia takaisin 1px,
-                // jotta se ei uppoa maahan
-                d.position.y -= 1.0f;
-                // Pysäytetään velocity
-                d.velocity = sf::Vector2f(0.f, 0.f);
-            }
+
+        // Liikutetaan partikkelia vaakasuunnassa
+        sf::Vector2f nextH = d.position;
+        nextH.x += d.velocity.x * deltaTime;
+        if (terrain.checkCollision(nextH)) {
+            d.velocity.x = 0.f;
+        } else {
+            d.position.x = nextH.x;
         }
+        
+        // Painovoima ja pystysuora liike
+        d.velocity.y += gravity * 0.5f * deltaTime;
+        sf::Vector2f nextV = d.position;
+        nextV.y += d.velocity.y * deltaTime;
+        
+        // Tarkistetaan törmääkö maahan
+        if (terrain.checkCollision(nextV)) {
+            // pysäytä pystysuuntainen nopeus
+            d.velocity.y = 0.f;
+        
+            while (terrain.checkCollision(nextV))
+                nextV.y -= 1.f;
+
+            d.position.y = nextV.y;
+
+            } else {
+                d.position.y = nextV.y;
+            }
+        
         // Vähennetään elinaikaa
         d.lifetime -= deltaTime;
     }
 
-        // Poista kuolleet partikkelit
-        debrisList.erase(
-            std::remove_if(debrisList.begin(), debrisList.end(),
-                [](const Debris &d){ return d.lifetime <= 0; }),
-            debrisList.end()
-        );
+    // Poista kuolleet partikkelit
+    debrisList.erase(
+        std::remove_if(debrisList.begin(), debrisList.end(),
+            [](const Debris &d){ return d.lifetime <= 0.f; }),
+        debrisList.end()
+    );
 }
 
-/* =================================================
-   DEBRIS & RESET GAME
-   ================================================= */
+/* =================
+   DEBRIS
+   ==================*/
 
 void Game::spawnDebris(const std::vector<PixelInfo>& destroyedPixels, sf::Vector2f center) {
-    // esim. rajoitetaan partikkelien maksimimäärää
+    // rajoitetaan partikkelien maksimimäärää
     int maxParticles = 100;  
     int count = 0;
 
@@ -357,7 +359,7 @@ void Game::spawnDebris(const std::vector<PixelInfo>& destroyedPixels, sf::Vector
 
         // Haetaan pikselille satunnainen nopeus
         float vx = -100 + std::rand() % 201;   // 
-        float vy = -100 + std::rand() % 201;  // 
+        float vy = -125 + std::rand() % 251;  // 
         sf::Vector2f vel(vx, vy);
 
         // Väri 
@@ -370,8 +372,9 @@ void Game::spawnDebris(const std::vector<PixelInfo>& destroyedPixels, sf::Vector
         count++;
     }
 }
-
-
+/* ===============
+RESET GAME
+================= */
 void Game::resetGame() {
     // Nollataan maasto ensin
     terrain.initialize(); // Luo uusi maasto ennen tankkien sijoittamista
