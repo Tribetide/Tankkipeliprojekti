@@ -31,6 +31,16 @@ EventManager::EventManager(Tank &t1, Tank &t2, Game &g)
 
 
 void EventManager::update(const std::vector<Projectile>& projectiles) {
+    // Jos aktiivinen tankki on tuhottu, vaihdetaan vuoro
+    Tank& active = (currentTank == 0 ? tank1 : tank2);
+    if (!waitingForTurnSwitch && active.getHp() == 0) {
+        std::cout << "[EVENT] Active tank destroyed → ending turn in 2s\n";
+        waitingForTurnSwitch = true;
+        turnSwitchClock.restart();
+        return;
+    }
+
+    // Vuoron vaihto, jos odotetaan ammusten lentoa
     if (waitingForTurnSwitch) {
         if (turnSwitchClock.getElapsedTime().asSeconds() >= 2.0f) {  
             float windForce = 0.0f;  // 
@@ -38,7 +48,7 @@ void EventManager::update(const std::vector<Projectile>& projectiles) {
             waitingForTurnSwitch = false;
         }
     } 
-    // 🔥 Ajastin on mennyt nollaan, mutta tarkistetaan, onko ammus elossa
+    // Ajastin on mennyt nollaan, mutta tarkistetaan, onko ammus elossa
     else if (!turnTimerPaused && turnClock.getElapsedTime().asSeconds() > TURN_TIME_LIMIT) {
         if (!anyProjectilesAlive(projectiles)) {  
             float windForce = 0.0f;
@@ -48,9 +58,9 @@ void EventManager::update(const std::vector<Projectile>& projectiles) {
 }
 
 
-
+// Vuoron vaihto
 void EventManager::switchTurn(float &windForce, Game &game) {
-    // 🔥 Tarkistetaan ennen vuoron vaihtoa, onko peli päättynyt
+    // Tarkistetaan ennen vuoron vaihtoa, onko peli päättynyt
     if (tank1.getHp() == 0 || tank2.getHp() == 0) {
         game.endGame();  // 🔥 Jos joku tankki on kuollut, lopetetaan peli
         return;

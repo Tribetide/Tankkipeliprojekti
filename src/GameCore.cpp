@@ -104,6 +104,9 @@ void Game::processEvents() {
         Tank &activeTank = (eventManager.getCurrentTurn() == 0) ? tank1 : tank2;
         const Tank &opponentTank = (eventManager.getCurrentTurn() == 0) ? tank2 : tank1;
 
+        // Jos aktiivinen tankki on tuhottu, lopeta käsittely
+        if (activeTank.isDestroyed()) 
+        return;
 
         /* ----------  Näppäimistö ---------- */
 

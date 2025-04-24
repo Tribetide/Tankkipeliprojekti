@@ -70,6 +70,7 @@ void Tank::toggleControlMode() {
 void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain, 
                         std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, 
                         sf::Clock &turnClock, const Tank &opponent) {
+    if (destroyed) return; // Ei voi liikkua tai ampua, jos tankki on tuhottu
 
     if (key == sf::Keyboard::Left)
         rotateTurret(-5.0f);  // Kääntää tykkiä vasemmalle
@@ -96,6 +97,7 @@ void Tank::handleInput(sf::Keyboard::Key key, Terrain &terrain,
 // -- Hiiriohjaus
 void Tank::handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &projectiles,
                             bool &waitingForTurnSwitch, sf::Clock &turnClock) {
+    if (destroyed) return; // Ei voi liikkua tai ampua, jos tankki on tuhottu
     sf::Vector2i mousePos = sf::Mouse::getPosition(window);
     sf::Vector2f tankPos = upperBody.getPosition();
 

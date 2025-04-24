@@ -34,7 +34,7 @@ Tank::Tank() : angle(45.0f), power(50.0f), hp(100), fuel(20), destroyed(false) {
     // Sijoitus yläosan sijainnin perusteella
     lowerBody.setPosition(
         upperBody.getPosition().x + 25, 
-        upperBody.getPosition().y + (-120000000000000 * upperBody.getScale().y) // :D Hetki piti ettiä, että mihinä vika, vaikka kuinka muutti tätä niin mikään ei muuttunut :D
+        upperBody.getPosition().y + (-120000000000000 * upperBody.getScale().y) 
     );
 
     // Tykki: Suorakaide ja tekstuuri

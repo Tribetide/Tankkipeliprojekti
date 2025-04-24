@@ -17,7 +17,7 @@ static float findGroundY(float x, const Terrain& terrain, int screenH   = 1080)
         while (y >= 0 && !terrain.checkCollision(sf::Vector2f(x, (float)y)))
         --y;
 
-        if (y < 0)                     // koko sarake on ilmaa → palautetaan "taivas"
+        if (y < 0)  // Jos ei löydy kiinteää pikseliä, palauta ruudun korkeus
         return (float)screenH;
 
         // Kulje ylöspäin niin kauan kuin pikseli on kiinteä 
@@ -77,8 +77,6 @@ void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
             return;
         }
     }
-    // Jos taas heightDiff >= 0, eli maapinta laskee (tai pysyy samana),
-    // sallitaan liike, vaikka kulma olisi lähellä 90°.
     
     // Lasketaan uusi y-sijainti suoraan laskettuna: pohjakorkeus - offset
     float targetY = newHeight - 40;
@@ -132,12 +130,11 @@ void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
 void Tank::update(Terrain &terrain, float gravity) {
 
     sf::Vector2f position = upperBody.getPosition(); // Tankin yläosan sijainti
-    float moveAmount = gravity/100.0f;  // Testataan suuremmalla arvolla
+    float moveAmount = gravity/100.0f; 
     sf::Vector2f checkPoint(position.x + 30, position.y + 45); // Tarkistetaan kohta tankin alapuolella
 
     if (checkPoint.x >= 0 && checkPoint.x < 1920 && checkPoint.y >= 0 && checkPoint.y < 1200 && 
         !terrain.checkCollision(checkPoint)) {
-        // Ei maata alla: pudotaan
         upperBody.move(0, moveAmount);
         lowerBody.move(0, moveAmount);
         turret.move(0, moveAmount);
@@ -168,7 +165,6 @@ void Tank::update(Terrain &terrain, float gravity) {
         }
     }
 }
-
 
 
 /*=========================
@@ -217,15 +213,16 @@ sf::Vector2f Tank::getPosition() const {
     GETBOUNDS (TANKIN TÖRMÄYSLAATIKKO)
 ======================================*/
 
+// Palauttaa tankin törmäyslaatikon (bounding box)
 sf::FloatRect Tank::getBounds() const {
     sf::FloatRect ub = upperBody.getGlobalBounds();
     sf::FloatRect lb = lowerBody.getGlobalBounds();
     sf::FloatRect tb = turret.getGlobalBounds();
 
-    // Lasketaan “union” manuaalisesti, eli yhdistetään kaikki bounding boxit
-    float left   = std::min({ub.left, lb.left, tb.left});
-    float top    = std::min({ub.top, lb.top, tb.top});
-    float right  = std::max({ub.left + ub.width, 
+    // Lasketaan tankin törmäyslaatikko yhdistämällä yläosa, alaosa ja tykki
+    float left = std::min({ub.left, lb.left, tb.left});
+    float top = std::min({ub.top, lb.top, tb.top});
+    float right = std::max({ub.left + ub.width, 
                              lb.left + lb.width, 
                              tb.left + tb.width});
     float bottom = std::max({ub.top + ub.height, 
@@ -235,16 +232,18 @@ sf::FloatRect Tank::getBounds() const {
     return sf::FloatRect(left, top, right - left, bottom - top);
 }
 
+
 int Tank::getFuel() const {return fuel;}
 void Tank::resetFuel() {fuel = 20;}
 
+
+// Resettaa tankin tilan aloitustilanteeseen
 void Tank::reset(Terrain &terrain, const sf::Vector2f& startPosition) {
     // Palautetaan tankki annettuun sijaintiin ja asetetaan kaikki parametrit nollaksi
-    placeOnTerrain(terrain, startPosition.x); // Käytetään annettua paikkaa
+    placeOnTerrain(terrain, startPosition.x);
     power = 50.0f;  
-//    angle = 45.0f;
     hp = 100;  
     destroyed = false; 
-    fuel = 20; // Nollataan polttoaine
+    fuel = 20; 
 }
 
