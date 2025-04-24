@@ -162,7 +162,7 @@ void Tank::update(Terrain &terrain, float gravity) {
             // Jos pudotaan enemmän kuin 20 pikseliä, otetaan vahinkoa
             if (fallDistance > 20.f) {
                 // Asetetaan alle tietyn kynnysarvon pudotukset eivät aiheuta vahinkoa
-                const float safeFallDistance = 30.f; // Esim. alle 30 px pudotus: ei vahinkoa
+                const float safeFallDistance = 50.f; // Esim. alle 30 px pudotus: ei vahinkoa
                 const float fallMultiplier = 0.1f;   // Vähennetään vahinkoa
                 int damage = 0;
                 if (fallDistance > safeFallDistance) {
