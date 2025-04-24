@@ -30,27 +30,10 @@ EventManager::EventManager(Tank &t1, Tank &t2, Game &g)
     }
 
 
-    /*void EventManager::handleShot(Projectile &projectile, Terrain &terrain) {
-        if (!projectile.alive) return;  // 🔥 Jos ammus on jo "kuollut", älä käsittele uudelleen
-    
-        Tank &opponent = (currentTank == 0) ? tank2 : tank1;
-    
-        // 🔥 Tarkistetaan, onko ammus osunut maahan
-        if (terrain.checkCollision(projectile.shape.getPosition())) {
-            projectile.alive = false;  // 🔥 Ammus kuolee osuessaan maahan
-        }
-    
-        // 🔥 Jos ammus kuoli nyt, vaihda vuoro
-        if (!projectile.alive) {
-            waitingForTurnSwitch = true;  // 🔥 Odotetaan ennen vuoron vaihtoa
-            turnSwitchClock.restart();  // 🔥 Käynnistetään viivekello
-        }
-    }*/
-
 void EventManager::update(const std::vector<Projectile>& projectiles) {
     if (waitingForTurnSwitch) {
         if (turnSwitchClock.getElapsedTime().asSeconds() >= 2.0f) {  
-            float windForce = 0.0f;  // Initialize windForce
+            float windForce = 0.0f;  // 
             switchTurn(windForce, game);
             waitingForTurnSwitch = false;
         }
@@ -58,10 +41,9 @@ void EventManager::update(const std::vector<Projectile>& projectiles) {
     // 🔥 Ajastin on mennyt nollaan, mutta tarkistetaan, onko ammus elossa
     else if (!turnTimerPaused && turnClock.getElapsedTime().asSeconds() > TURN_TIME_LIMIT) {
         if (!anyProjectilesAlive(projectiles)) {  
-            float windForce = 0.0f;  // Initialize windForce
+            float windForce = 0.0f;
             switchTurn(windForce, game);
         } 
-        // 🔥 Jos ammus on yhä ilmassa, ei tehdä mitään – odotetaan sen putoamista
     }
 }
 

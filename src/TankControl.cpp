@@ -145,7 +145,7 @@ void Tank::takeDamage(int damage)
         hp = 0;
 
         // Tuhotaan tankki, jos HP on 0
-        if (!destroyed) {                 // jotta ääni soi vain kerran
+        if (!destroyed) {                 
             destroyed = true;
             SoundManager::getInstance()
                 .playSound("tank_destroyed", 100.f);   // 🔊

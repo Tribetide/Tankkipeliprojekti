@@ -25,11 +25,12 @@ public:
     void handleInput(sf::Keyboard::Key key, Terrain &terrain, 
                     std::vector<Projectile> &projectiles, bool &waitingForTurnSwitch, 
                     sf::Clock &turnClock, const Tank &opponent);
-    bool mouseControlEnabled = false;  // Uusi ohjaustila
+    bool mouseControlEnabled = false;  
     void handleMouseInput(sf::RenderWindow &window, std::vector<Projectile> &projectiles,
                             bool &waitingForTurnSwitch, sf::Clock &turnClock);
-    void toggleControlMode(); // Vaihtaa ohjaustilaa
+    void toggleControlMode();
     float mouseDragStartY = -1.f;
+
 
     // 🔥 Tuhoutuminen ja elämäpisteet
     void takeDamage(int damage);

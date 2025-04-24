@@ -10,13 +10,13 @@
 
 class SoundManager {
 public:
-    /* -------- Singleton -------- */
+    // Singleton
     static SoundManager& getInstance() {
-        static SoundManager instance;      // ← kutsuu yksityisen ctorin
+        static SoundManager instance;      
         return instance;
     }
 
-    /* -------- Bufferien ja musiikin lataus -------- */
+    // Bufferien ja musiikin lataus
     bool loadSound(const std::string& key, const std::string& filename)
     {
         sf::SoundBuffer buffer;
@@ -39,13 +39,13 @@ public:
         return (it == musics.end()) ? nullptr : it->second.get();
     }
 
-    /* -------- Ääniefektin soittaminen -------- */
+    //Äänikanavien toisto
     void playSound(const std::string& key, float volume = 100.f)
     {
         auto it = soundBuffers.find(key);
-        if (it == soundBuffers.end()) return;           // buffereita ei löytynyt
+        if (it == soundBuffers.end()) return;           
 
-        /* 1) käytä pysähtynyttä kanavaa uudelleen */
+        // Käytetään kierrätettäviä kanavia
         for (auto& s : sounds) {
             if (s.getStatus() == sf::Sound::Stopped) {
                 s.setBuffer(it->second);
@@ -55,15 +55,15 @@ public:
             }
         }
 
-        /* 2) kaikki kanavat varattuja → luodaan uusi  */
-        sounds.emplace_back();                          // kapasiteetti jo varattu
+        // Luodaan uusi kanava, jos kaikki ovat varattuja
+        sounds.emplace_back();                         
         sf::Sound& s = sounds.back();
         s.setBuffer(it->second);
         s.setVolume(volume);
         s.play();
     }
 
-    /* -------- Päivitys pelisilmukassa -------- */
+    // Päivitys peliloopissa
     void update()
     {
         sounds.erase(
@@ -75,12 +75,12 @@ public:
     }
 
 private:
-    /* -------- Yksityinen ctor -------- */
+    // Singletonin yksityinen konstruktori
     SoundManager() { sounds.reserve(64); }              // varataan kanavat
     SoundManager(const SoundManager&)            = delete;
     SoundManager& operator=(const SoundManager&) = delete;
 
-    /* -------- Data -------- */
+    // Kanavat ja äänitiedostot
     std::vector<sf::Sound> sounds;                      // kierrätettävät kanavat
     std::map<std::string, sf::SoundBuffer> soundBuffers;
     std::map<std::string, std::unique_ptr<sf::Music>> musics;

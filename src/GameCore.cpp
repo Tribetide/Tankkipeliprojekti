@@ -307,7 +307,7 @@ void Game::update() {
                 d.velocity = sf::Vector2f(0.f, 0.f);
             }
         }
-        // 4) Vähennetään elinaikaa
+        // Vähennetään elinaikaa
         d.lifetime -= deltaTime;
     }
 
