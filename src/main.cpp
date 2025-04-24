@@ -5,27 +5,33 @@
 
 int main() {
     // 1. Ikkuna 
-    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
+//    sf::VideoMode desktop = sf::VideoMode::getDesktopMode();
 
     // Luodaan ikkuna koko näytölle
-    sf::RenderWindow window(desktop, "Tankkipeli", sf::Style::Fullscreen);
+//    sf::RenderWindow window(desktop, "Tankkipeli", sf::Style::Fullscreen);
+
+    sf::VideoMode windowMode(1920, 1080);
+    sf::RenderWindow window(windowMode, "Tankkipeli", sf::Style::Titlebar | sf::Style::Resize | sf::Style::Close);
 
     // 2. Lataa äänitiedostot
     auto& soundMgr = SoundManager::getInstance();
-    if (!soundMgr.loadSound("fire", "assets/sounds/Fire.ogg")) {
+    if (!soundMgr.loadSound("fire", "assets/sounds/Fire.ogg") &&
+        !soundMgr.loadSound("fire", "../assets/sounds/Fire.ogg")) {
         std::cerr << "Virhe ladattaessa Fire.ogg\n";
     }
-    if (!soundMgr.loadSound("explosion", "assets/sounds/Explosion.ogg")) {
+    if (!soundMgr.loadSound("explosion", "assets/sounds/Explosion.ogg") &&
+        !soundMgr.loadSound("explosion", "../assets/sounds/Explosion.ogg")) {
         std::cerr << "Virhe ladattaessa Explosion.ogg\n";
     }
-    if (!soundMgr.loadMusic("war", "assets/sounds/War.ogg")) {
+    if (!soundMgr.loadMusic("war", "assets/sounds/War.ogg") &&
+        !soundMgr.loadMusic("war", "../assets/sounds/War.ogg")) {
         std::cerr << "Virhe ladattaessa War.ogg\n";
     }
-    if (!soundMgr.loadSound("tank_destroyed",
-            "assets/sounds/Tank_Destroyed.ogg"))           
-    {
+    if (!soundMgr.loadSound("tank_destroyed", "assets/sounds/Tank_Destroyed.ogg") &&
+        !soundMgr.loadSound("tank_destroyed", "../assets/sounds/Tank_Destroyed.ogg")) {
         std::cerr << "Virhe ladattaessa Tank_Destroyed.ogg\n";
     }
+    
 
     // 3. Soita War.ogg (30% volume, toistuu loopissa)
     sf::Music* warMusic = soundMgr.getMusic("war");
