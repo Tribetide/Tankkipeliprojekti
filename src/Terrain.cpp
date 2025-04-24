@@ -233,7 +233,7 @@ bool Terrain::isLavaPixel(const sf::Color& c) const
     return (c.r > 240 && c.g < 120 && c.b < 60); 
 }
 
-// Tarkisteaan onko laavaa tankin
+// Tarkisteaan onko laavaa tankin alla
 bool Terrain::isLavaAt(sf::Vector2f point) const
 {
     int x = (int)point.x;
@@ -246,6 +246,9 @@ bool Terrain::isLavaAt(sf::Vector2f point) const
     return isLavaPixel( terrainImage.getPixel(x, y) );
 }
 
+/* ============================
+Maaston päivitys ja piirtäminen
+============================ */
 
 void Terrain::update(float deltaTime) {
     shootingStarTimer += deltaTime;
@@ -318,8 +321,12 @@ void Terrain::draw(sf::RenderWindow &window) {
     // Piirretään varsinainen maastosprite
     window.draw(sprite);
 }
+/* 
+=========================
+Pikseleiden tuhoutuminen ja törmäystarkistus
+========================= */
 
-// Tarkistetaan törmäys maaston kanssa
+// Tarkistetaan törmäys maaston kanssa, 
 bool Terrain::checkCollision(const sf::Vector2f& point) const {
     int x = static_cast<int>(point.x);
     int y = static_cast<int>(point.y);
@@ -351,9 +358,9 @@ std::vector<PixelInfo> Terrain::destroy(sf::Vector2f position, int baseRadius) {
 
         sf::Color old = terrainImage.getPixel(x,y);
         if (old.a==0) continue;                 // jo tyhjä
-        if (isLavaPixel(old)) continue;         // ❷ älä koske laavaan
+        if (isLavaPixel(old)) continue;         // ei tuhota laavaa
 
-        destroyed.push_back({{x,y},old});
+        destroyed.push_back({{x,y},old}); // tallennetaan tuhotut pikselit debristä varten
         terrainImage.setPixel(x,y,sf::Color::Transparent);
     }
 
