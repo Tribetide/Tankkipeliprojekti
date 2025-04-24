@@ -2,6 +2,7 @@
 #include "Terrain.hpp"  // Lisätty, jotta voidaan käyttää Terrain-olioita
 #include <cmath>  // Tämä tarvitaan trigonometristen funktioiden käyttöön
 #include <iostream>  // Debug-tulostukset
+#include "Config.hpp"
 
 
 /*=================================
@@ -10,7 +11,7 @@
 
 
 // Apu­funktio – löytää ”maan” Y-koordinaatin annetusta X:stä
-static float findGroundY(float x, const Terrain& terrain, int screenH   = 1080) 
+static float findGroundY(float x, const Terrain& terrain, int screenH = Config::SCREEN_HEIGHT) 
 {
         //Etsi ensimmäinen kiinteä pikseli alhaalta 
         int y = screenH - 1;
@@ -107,6 +108,15 @@ void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
             std::cout << "[MOVE] Aborting move: collision with opponent." << std::endl;
             return;
         }
+
+        // Estä liike, jos bounding box siirtyy ruudun ulkopuolelle
+        const float screenW = static_cast<float>(Config::SCREEN_WIDTH);
+        if (futureBounds.left < 0.f ||
+            futureBounds.left + futureBounds.width > screenW)
+        {
+            // keskeytä siirto
+            return;
+        }
         
         // Päivitetään tankin sijainti
         upperBody.setPosition(newPosition.x, adjustedY);
@@ -133,7 +143,7 @@ void Tank::update(Terrain &terrain, float gravity) {
     float moveAmount = gravity/100.0f; 
     sf::Vector2f checkPoint(position.x + 30, position.y + 45); // Tarkistetaan kohta tankin alapuolella
 
-    if (checkPoint.x >= 0 && checkPoint.x < 1920 && checkPoint.y >= 0 && checkPoint.y < 1200 && 
+    if (checkPoint.x >= 0 && checkPoint.x < Config::SCREEN_WIDTH && checkPoint.y >= 0 && checkPoint.y < 1200 && 
         !terrain.checkCollision(checkPoint)) {
         upperBody.move(0, moveAmount);
         lowerBody.move(0, moveAmount);
@@ -174,7 +184,7 @@ void Tank::placeOnTerrain(Terrain &terrain, int startX) {
     int terrainHeight = 0;
 
     // Selvitetään korkein piste maastossa, jossa tankki voidaan sijoittaa
-    for (int i = 0; i < 1080; i++) {
+    for (int i = 0; i < Config::SCREEN_HEIGHT; i++) {
         if (terrain.checkCollision(sf::Vector2f(startX, i))) {
             terrainHeight = i; // Asetetaan alaosan korkeus suoraan maastoon
             break;
