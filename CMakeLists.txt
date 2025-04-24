@@ -10,6 +10,21 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # 🔹 Etsitään kaikki lähdetiedostot src-kansiosta
 file(GLOB SOURCES "${CMAKE_SOURCE_DIR}/src/*.cpp")
 
+# Kopioi fontit build-, Release-ja Debug-kansioihin
+file(COPY assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/assets)
+file(COPY assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
+file(COPY assets/fonts DESTINATION ${CMAKE_BINARY_DIR}/Release/assets)
+
+# 🔹Kopioi kuvat build-, Release-ja Debug-kansioihin
+file(COPY assets/images DESTINATION ${CMAKE_BINARY_DIR}/assets)
+file(COPY assets/images DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
+file(COPY assets/images DESTINATION ${CMAKE_BINARY_DIR}/Release/assets)
+
+# Kopioi äänet build-, Release-ja Debug-kansioihin
+file(COPY assets/sounds DESTINATION ${CMAKE_BINARY_DIR}/assets)
+file(COPY assets/sounds DESTINATION ${CMAKE_BINARY_DIR}/Debug/assets)
+file(COPY assets/sounds DESTINATION ${CMAKE_BINARY_DIR}/Release/assets)
+
 # 🔹 Luodaan suoritettava ohjelma
 add_executable(Tankkipeli ${SOURCES})
 
