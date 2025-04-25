@@ -1,5 +1,6 @@
 #include "Terrain.hpp"
 #include <Game.hpp> 
+#include "Config.hpp"
 #include <cmath>       // floor, fmod
 #include <algorithm>   // shuffle
 #include <numeric>     // iota
@@ -104,7 +105,7 @@ void Terrain::initialize() {
     createSky(); // Kuu & tähdet
 
     // Luodaan kuva aluksi tyhjänä (läpinäkyvä) koko ruudun kokoisena
-    terrainImage.create(1920, 1080, sf::Color::Transparent);
+    terrainImage.create(Config::SCREEN_WIDTH, Config::SCREEN_HEIGHT, sf::Color::Transparent);
 
     // Luodaan PerlinNoise-olio dynaamisella seedillä
     unsigned int seed = static_cast<unsigned>(std::time(nullptr));
@@ -121,14 +122,14 @@ void Terrain::initialize() {
     float scale       = 0.001f;   // x-skaala (mitä isompi, sitä "tiheämpi" maaston vaihtelu), 0.001..0.1
     int   octaves     = 3;       // montako oktaavia, mitä enemmän, sitä "sotkuisempi" maasto, 1..8
     float persistence = 0.4f;    // amplitudin pieneneminen per oktaavi, 0..1, 1 = ei pienenemistä
-    int   baseLine    = 100;     // peruskorkeus, josta maasto lähtee, 0..1080, 0 on yläreuna, 1080 on alareuna
-    int   maxVariation= 900;     // maksimikorkeus perlin-kukkuloille, 0..1080
+    int   baseLine    = 100;     // peruskorkeus, josta maasto lähtee, 0..Config::SCREEN_HEIGHT, 0 on yläreuna, Config::SCREEN_HEIGHT on alareuna
+    int   maxVariation= 900;     // maksimikorkeus perlin-kukkuloille, 0..Config::SCREEN_HEIGHT
 
-    // Peruslinjan y-koordinaatti (missä maa alkaa)
-    std::vector<int> groundHeights(1920);
+    // Perlinin satunnainen vaihtelu maan pinnan korkeudessa
+    std::vector<int> groundHeights(Config::SCREEN_WIDTH);
 
-    // Käydään 1920 pikseliä x-suunnassa
-    for (int x = 0; x < 1920; x++) {
+    // Käydään Config::SCREEN_WIDTH pikseliä x-suunnassa
+    for (int x = 0; x < Config::SCREEN_WIDTH; x++) {
         double noiseValue = 0.0;
         double frequency  = 1.0;
         double amplitude  = 1.0;
@@ -156,10 +157,10 @@ void Terrain::initialize() {
     }
 
     // Piirretään maasto pikseli kerrallaan
-    for (int x = 0; x < 1920; x++) {
+    for (int x = 0; x < Config::SCREEN_WIDTH; x++) {
         int gY = groundHeights[x];
         if (gY < 0)   gY = 0;
-        if (gY > 1080) gY = 1080;
+        if (gY > Config::SCREEN_HEIGHT) gY = Config::SCREEN_HEIGHT;
 
       
          // Perlinen satunnainen vaihtelu ruoho‑kerroksen paksuuteen
@@ -176,16 +177,16 @@ void Terrain::initialize() {
         int localLava = LAVA_MIN_THICK + static_cast<int>(nl * (LAVA_MAX_THICK-LAVA_MIN_THICK)/2);
         localLava = std::clamp(localLava, LAVA_MIN_THICK, LAVA_MAX_THICK);
 
-        int lavaStartY = 1080 - localLava; 
+        int lavaStartY = Config::SCREEN_HEIGHT - localLava; 
 
         // Lasketaan jyrkkyys verrattuna viereiseen x+1
         int slope = 0;
-        if (x < 1919) {
+        if (x < Config::SCREEN_WIDTH - 1) {
             slope = std::abs(groundHeights[x] - groundHeights[x+1]);
         }
 
         // Piirretään maata groundY:stä alaspäin
-        for (int y = gY; y < 1080; y++) {
+        for (int y = gY; y < Config::SCREEN_HEIGHT; y++) {
 
             // Syvyys maa‑pinnan ylärajasta
             int depth = y - gY;
@@ -205,7 +206,8 @@ void Terrain::initialize() {
             int dither = ((x ^ y) & 3) - 15; //
             int slopeDarken = slope;                        // jyrkkyys tummentaa
 
-            int r = std::clamp<int>(baseCol.r + dither - slopeDarken, 0, 255);
+            // Tummentaa väriä jyrkkyyden mukaan
+            int r = std::clamp<int>(baseCol.r + dither - slopeDarken, 0, 255); 
             int g = std::clamp<int>(baseCol.g + dither - slopeDarken, 0, 255);
             int b = std::clamp<int>(baseCol.b + dither - slopeDarken, 0, 255);
 
@@ -255,7 +257,7 @@ void Terrain::update(float deltaTime) {
 
     if (shootingStarTimer >= 55.0f) {
         ShootingStar star;
-        star.position = sf::Vector2f(std::rand() % 1920, std::rand() % 200); // Satunnainen aloituspaikka
+        star.position = sf::Vector2f(std::rand() % Config::SCREEN_WIDTH, std::rand() % 200); // Satunnainen aloituspaikka
         star.velocity = sf::Vector2f(-150.0f + (std::rand() % 100), 50.0f); // Tähdenlennon nopeus
         star.lifetime = 2.0f;
 
@@ -283,7 +285,7 @@ void Terrain::createSky() {
     // Luodaan satunnaisia tähtiä
     stars.clear();
     for (int i = 0; i < 50; i++) {
-        float x = std::rand() % 1920;
+        float x = std::rand() % Config::SCREEN_WIDTH;
         float y = std::rand() % 400; // Tähdet korkeintaan 400 pikseliä ylhäältä
         stars.push_back(sf::Vector2f(x, y));
     }
@@ -354,7 +356,7 @@ std::vector<PixelInfo> Terrain::destroy(sf::Vector2f position, int baseRadius) {
         if (std::sqrt(dx*dx+dy*dy) > radius) continue;
 
         int x = x0+dx, y = y0+dy;
-        if (x<0||x>1919||y<0||y>1079) continue;
+        if (x<0||x>(Config::SCREEN_WIDTH - 1)||y<0||y>(Config::SCREEN_HEIGHT-1)) continue;
 
         sf::Color old = terrainImage.getPixel(x,y);
         if (old.a==0) continue;                 // jo tyhjä
