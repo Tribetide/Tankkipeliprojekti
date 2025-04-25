@@ -9,25 +9,42 @@
     TANKIN FYSIIKKA
 ==================================*/
 
-
-// Apu­funktio – löytää ”maan” Y-koordinaatin annetusta X:stä
-static float findGroundY(float x, const Terrain& terrain, int screenH = Config::SCREEN_HEIGHT) 
+/* Apu­funktio – löytää ”maan” Y-koordinaatin annetusta X:stä. Etsii X-sarakkeen kaikki maakerrokset ja palauttaa
+segmentin y-kohtaisten “yläharjojen” listan tops. refY on aiempi korkeus, jonka perusteella valitaan segmentti. */
+static float findBestGroundY(float x, const Terrain& terrain, float refY, int screenH = Config::SCREEN_HEIGHT)
 {
-        //Etsi ensimmäinen kiinteä pikseli alhaalta 
-        int y = screenH - 1;
-        while (y >= 0 && !terrain.checkCollision(sf::Vector2f(x, (float)y)))
-        --y;
+    // Etsi ensimmäinen kiinteä pikseli alhaalta
+    std::vector<int> tops;
+    bool inGround = false;
 
-        if (y < 0)  // Jos ei löydy kiinteää pikseliä, palauta ruudun korkeus
-        return (float)screenH;
-
-        // Kulje ylöspäin niin kauan kuin pikseli on kiinteä 
-        while (y >= 0 && terrain.checkCollision(sf::Vector2f(x, (float)y)))
-        --y;
-
-        // Kunnes löydetään ilmapikseli, palauta seuraava pikseli
-        return (float)(y + 1);
+    // Skannaa X-sarakkeen kaikki pikselit alhaalta ylös
+    for (int y = 0; y < screenH; ++y) {
+        bool coll = terrain.checkCollision({ x, (float)y });
+        if (coll && !inGround) {
+            tops.push_back(y);      // uusi segmentti alkaa
+            inGround = true;
+        }
+        else if (!coll && inGround) {
+            inGround = false;       // segmentti päättyy
+        }
     }
+
+    if (tops.empty())
+        return static_cast<float>(screenH);  // ei maata ollenkaan
+
+    // Valitse se top, joka on lähimpänä refY:tä, aiempaa korkeutta
+    int bestY = tops[0];
+    float bestDist = std::abs(tops[0] - refY);
+    for (int ty : tops) {
+        float d = std::abs(ty - refY);
+        if (d < bestDist) {
+            bestDist = d;
+            bestY = ty;
+        }
+    }
+    return static_cast<float>(bestY);
+}
+
 
 
 void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
@@ -37,15 +54,18 @@ void Tank::move(float dx, Terrain &terrain, const Tank &opponent) {
         std::cout << "[MOVE] Fuel empty, cannot move." << std::endl;
         return;
     }
-    
 
     sf::Vector2f oldPosition = upperBody.getPosition();
     sf::Vector2f newPosition = oldPosition;
     newPosition.x += dx;
 
     // Lasketaan uusi maapinnan korkeus (groundY) uuden X:n perusteella
-    float newHeight = findGroundY(newPosition.x + 30.f, terrain);
-    float oldHeight = findGroundY(oldPosition.x + 30.f, terrain);
+    // ensin haetaan se segmentti, jossa tankki nyt on
+    float oldHeight = findBestGroundY(oldPosition.x + 30.f, terrain, oldPosition.y + 40.f );
+
+    // haetaan uusi segmentti uuden X:n kohdalla,
+    // valiten segmentin, joka on lähimpänä vanhaa korkeussijaintia
+    float newHeight = findBestGroundY(newPosition.x + 30.f, terrain, oldHeight);
 
     // Lasketaan absoluuttinen korkeusero (slope) – debug-tulostukseksi
     float slope = std::abs(newHeight - oldHeight);
