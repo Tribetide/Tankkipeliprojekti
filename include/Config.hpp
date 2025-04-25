@@ -11,6 +11,9 @@ namespace Config {
     const std::string FONT_PATH_2 = "../assets/fonts/SHOWG.TTF";    // 🔥 Jos ajetaan `build/`
     const std::string FONT_PATH_3 = "../../assets/fonts/SHOWG.TTF"; // 🔥 Jos ajetaan `build/Debug/`
 
+    // Päivityssnopeus
+    constexpr float FIXED_DT = 0.9f / 60.0f; //
+
     //Ruudun/kentän mitat
     static const int SCREEN_WIDTH = 1920; // Kentän leveys
     static const int SCREEN_HEIGHT = 1080; // Kentän korkeus

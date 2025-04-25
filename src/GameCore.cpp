@@ -159,7 +159,7 @@ void Game::processEvents() {
    ================================================= */
 
 void Game::update() {
-    float deltaTime = 0.9f / 60.0f;
+    float deltaTime = Config::FIXED_DT;
 
     //  Jos odotetaan lopetustaukoa, päivitä vain räjähdykset ja tarkista kello
     if (pendingEndGame) {
