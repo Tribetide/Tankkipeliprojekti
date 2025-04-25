@@ -22,7 +22,7 @@ void Explosion::update(float deltaTime) {
     // Alfadegreetä pienennetään edetessä
     sf::Color color(255, 165, 0); // Oranssi
     color.a = static_cast<sf::Uint8>(255 * (1.0f - progress * Config::EXPLOSION_FADE_RATIO)); // Fade out
-    shape.setFillColor(color);  // ✅ Nyt alfadegree toimii oikein
+    shape.setFillColor(color); 
 }
 
 
