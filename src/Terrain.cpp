@@ -7,7 +7,7 @@
 #include <random>
 #include <cstdlib>     // srand, rand
 #include <ctime>       // time
-#include <iostream>    // debug prints if needed
+#include <iostream>    // debug
 
 // =============================
 // Sisäinen PerlinNoise-luokka
